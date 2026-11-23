@@ -38,3 +38,15 @@
 .session-summary{display:block;margin-top:16px}
 .session-summary textarea{display:block;width:100%;min-height:100px;resize:vertical;margin-top:6px;background:#171614;border:1px solid #39352e;color:#eee5d6;padding:11px;font:12px/1.6 'DM Sans';outline:none}
 @media(max-width:560px){.session-meta{grid-template-columns:1fr}}
+
+
+/* Identidade visual dinâmica dos distritos */
+.character-card{border-top:2px solid var(--district-accent,#66563d);background:linear-gradient(145deg,var(--district-deep,#24211c),#1d1c19 62%)}
+.character-card:hover{border-color:var(--district-accent,#987847)}
+.character-card .avatar{border-color:var(--district-accent,#66563d);color:var(--district-accent,#b3915d)}
+.character-card span,.character-card small{color:var(--district-accent,#a38d68)}
+.district-profile{border:1px solid var(--district-accent,#66563d);border-left:4px solid var(--district-accent,#9e7b42);background:linear-gradient(100deg,var(--district-deep,#30251d),#1d1b18 75%);padding:17px 20px;margin:16px 0 20px}
+.district-profile-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.district-profile-top .eyebrow{color:var(--district-accent,#a99c82)}
+.district-profile-top strong{font:600 23px 'Cormorant Garamond';color:var(--district-accent,#e8ddc8)}
+.district-profile p{margin:8px 0 0;color:#c0b8a9;font-size:11px;line-height:1.6}
