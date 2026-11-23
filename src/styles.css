@@ -506,3 +506,55 @@ button:active{transform:translateY(0) scale(.99)}
 .background-preview img{width:min(100%,300px);height:100px;object-fit:cover;border:1px solid rgba(190,160,105,.35)}
 @media(max-width:900px){.master-status-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.master-status:last-child{grid-column:1/-1}}
 @media(max-width:560px){.master-intro{align-items:flex-start;padding:15px}.master-count{min-width:65px;padding:5px 8px}.master-count strong{font-size:32px}.master-count span{font-size:6px}.master-toolbar,.master-extra-grid{grid-template-columns:1fr}.master-tribute{padding:11px}.master-tribute-head{gap:9px}.master-tribute-head>.text-button{font-size:8px}.master-identity h4{font-size:20px}.master-status-grid{gap:6px}.master-status{padding:8px}.master-status-top{font-size:8px}.master-status-edit label{font-size:6px}}
+
+
+/* ── Ficha principal: atributos e perícias como painel de personagem ── */
+.character-build{display:grid;gap:16px;margin:18px 0}
+.build-panel{position:relative;padding:20px;border:1px solid rgba(190,160,105,.25);background:linear-gradient(145deg,rgba(30,27,23,.96),rgba(15,14,13,.96));box-shadow:0 14px 34px rgba(0,0,0,.16)}
+.build-panel:before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,var(--district-accent,#c6a36a),transparent 82%)}
+.build-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:16px;margin-bottom:15px;border-bottom:1px solid rgba(190,160,105,.16)}
+.build-panel-heading .eyebrow{font-size:8px;letter-spacing:2px;color:var(--district-accent,#c6a36a)}
+.build-panel-heading h3{margin:5px 0 2px;color:#f1e6d4;font:700 28px 'Cormorant Garamond',serif}
+.build-panel-heading p{margin:0;color:#a99d8b;font-size:10px;line-height:1.55}
+.point-counter{flex:0 0 auto;min-width:82px;padding:9px 12px;text-align:center;border:1px solid color-mix(in srgb,var(--district-accent,#c6a36a) 42%,transparent);background:rgba(0,0,0,.24)}
+.point-counter strong{display:block;color:#f0d49e;font:700 26px 'Cormorant Garamond',serif}
+.point-counter strong small{font:500 13px 'Cormorant Garamond',serif;color:#9e927f}
+.point-counter span{display:block;margin-top:2px;color:#9e927f;font-size:6px;letter-spacing:1.3px}
+.attribute-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.attribute-card{position:relative;display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;align-items:center;min-width:0;padding:13px;border:1px solid rgba(190,160,105,.17);background:linear-gradient(110deg,rgba(0,0,0,.25),rgba(255,255,255,.018))}
+.attribute-index{align-self:start;color:var(--district-accent,#c6a36a);font:600 14px 'Cormorant Garamond',serif}
+.attribute-copy{min-width:0;display:grid;gap:4px}
+.attribute-copy strong{color:#eee3d0;font:600 17px 'Cormorant Garamond',serif}
+.attribute-copy small{color:#9f9585;font-size:9px;line-height:1.45}
+.attribute-control,.skill-value{display:flex;align-items:center;gap:4px}
+.attribute-control button,.skill-value button{width:27px;height:29px;border:1px solid rgba(190,160,105,.3);background:#28221b;color:#e8d4b0;font-size:17px;cursor:pointer}
+.attribute-control input,.skill-value input{width:37px;height:29px;text-align:center;border:1px solid rgba(190,160,105,.4);background:#11100f;color:#f1d8a7;font:700 15px 'Cormorant Garamond',serif}
+.attribute-meter{grid-column:2/-1;height:3px;background:rgba(255,255,255,.07);overflow:hidden}
+.attribute-meter i{display:block;height:100%;background:linear-gradient(90deg,#7f4039,var(--district-accent,#c6a36a));transition:width .2s}
+.build-ruleline{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:13px;padding-top:11px;border-top:1px solid rgba(190,160,105,.12);color:#a99d8b;font-size:9px}
+.build-feedback{margin:10px 0 0;padding:9px 11px;border-left:2px solid var(--district-accent,#c6a36a);background:rgba(190,160,105,.07);color:#d5c4a7;font-size:9px}
+.skill-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.skill-group{min-width:0;border:1px solid rgba(190,160,105,.16);background:rgba(0,0,0,.15)}
+.skill-group>header{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid rgba(190,160,105,.14);background:rgba(190,160,105,.045)}
+.skill-group>header>span{color:var(--district-accent,#c6a36a);font-size:15px}
+.skill-group>header h4{margin:0;color:#e9ddc9;font:600 16px 'Cormorant Garamond',serif}
+.skill-group>header small{margin-left:auto;color:#8f8677;font-size:8px}
+.skill-list{padding:3px 11px}
+.skill-row{display:grid;grid-template-columns:minmax(0,1fr) auto 42px;gap:8px;align-items:center;min-height:49px;border-bottom:1px solid rgba(190,160,105,.09)}
+.skill-row:last-child{border-bottom:0}
+.skill-name{min-width:0;display:grid;gap:3px}
+.skill-name strong{color:#e5dac7;font-size:10px;font-weight:600}
+.skill-name small{color:#8f8677;font-size:7px;line-height:1.3}
+.skill-value button{width:23px;height:24px;font-size:14px}
+.skill-value input{width:29px;height:24px;font:600 12px 'Cormorant Garamond',serif}
+.skill-effective{display:grid;justify-items:center;gap:1px;padding-left:7px;border-left:1px solid rgba(190,160,105,.15)}
+.skill-effective span{font-size:6px;letter-spacing:1px;color:#8f8677}
+.skill-effective strong{color:#e3c58d;font:700 19px 'Cormorant Garamond',serif}
+.skill-effective strong.positive{color:#9fbd83}
+.skill-effective strong.negative{color:#d58e7d}
+.modifier-summary{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px}
+.modifier-summary>div{display:grid;gap:5px;padding:11px;border:1px solid rgba(190,160,105,.15);background:rgba(0,0,0,.16)}
+.modifier-summary span{color:#9d907b;font-size:7px;letter-spacing:1.5px}
+.modifier-summary strong{color:#e0cba5;font-size:9px;line-height:1.5}
+@media(max-width:700px){.build-panel{padding:14px}.attribute-grid,.skill-groups{grid-template-columns:1fr}.build-panel-heading h3{font-size:25px}.attribute-card{grid-template-columns:24px minmax(0,1fr) auto;padding:11px}.modifier-summary{grid-template-columns:1fr}.point-counter{min-width:70px;padding:7px}.point-counter strong{font-size:23px}}
+@media(max-width:380px){.attribute-card{grid-template-columns:20px minmax(0,1fr) auto;gap:6px}.attribute-copy small{font-size:8px}.attribute-control{gap:2px}.attribute-control button{width:24px}.attribute-control input{width:31px}.skill-row{grid-template-columns:minmax(0,1fr) auto 34px;gap:5px}.skill-name strong{font-size:9px}}
