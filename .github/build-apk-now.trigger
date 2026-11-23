@@ -1,1 +1,1 @@
-Build Android APK on demand.
+Build Android APK for Arquivos da Capital v0.2.0
