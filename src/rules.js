@@ -17,18 +17,18 @@ export const TRAINING_WEIGHTS = [
 export const clamp=(n,min,max)=>Math.max(min,Math.min(max,Number(n)||0));
 export function effectiveSkills(character={}) {
   const base=character.skills||{}, age=AGE_MODIFIERS[Number(character.age)], district=DISTRICT_MODIFIERS[Number(character.district)], result={};
-  SKILLS.forEach(skill=>{let v=clamp(base[skill],0,99); if(age?.[0]===skill)v+=age[1];if(age?.[2]===skill)v+=age[3];if(district?.[0]===skill)v+=district[1];if(district?.[2]===skill)v+=district[3];result[skill]=Math.max(0,v);});
+  SKILLS.forEach(skill=>{let v=clamp(base[skill],0,99);if(age?.[0]===skill)v+=age[1];if(age?.[2]===skill)v+=age[3];if(district?.[0]===skill)v+=district[1];if(district?.[2]===skill)v+=district[3];result[skill]=Math.max(0,v);});
   return result;
 }
 export function derived(character={}) {
   const stats=character.stats||{}, vigor=clamp(stats.Vigor,0,5), strength=clamp(stats.Força,0,5), district=Number(character.district);
-  return {hpMax:16+vigor*2+(DISTRICT_HP[district]||0),carry:6+strength*2,skills:effectiveSkills(character)};
+  const districtBonus=Object.prototype.hasOwnProperty.call(DISTRICT_HP,district)?DISTRICT_HP[district]:null;
+  return {hpBase:16+vigor*2,hpDistrictBonus:districtBonus,hpMax:districtBonus===null?null:16+vigor*2+districtBonus,carry:6+strength*2,skills:effectiveSkills(character)};
 }
 export function rollD20({attribute=0,skill=0,dc=12,mode='normal'}={}) {
   const a=1+Math.floor(Math.random()*20), b=mode==='normal'?null:1+Math.floor(Math.random()*20);
   const die=mode==='advantage'?Math.max(a,b):mode==='disadvantage'?Math.min(a,b):a;
-  return {a,b,die,total:die+Number(attribute||0)+Number(skill||0),dc:Number(dc),success:die+Number(attribute||0)+Number(skill||0)>=Number(dc),critical:die===20,naturalFail:die===1};
+  const total=die+Number(attribute||0)+Number(skill||0);
+  return {a,b,die,total,dc:Number(dc),success:total>=Number(dc),critical:die===20,naturalFail:die===1};
 }
-export function attackDefense(character={}) {return 10+clamp(character.stats?.Agilidade,0,5);}
-export function dodgeDC(attackTotal,defense){const margin=attackTotal-defense;return margin<=4?16:margin<=8?18:20;}
 export function survivalPenalty(value){const n=clamp(value,0,10);if(n>=10)return 'Condição crítica';if(n>=9)return 'Desvantagem';if(n>=7)return -3;if(n>=5)return -2;if(n>=3)return -1;return 0;}
