@@ -99,7 +99,12 @@ function MasterPanel({ characters, setCharacters, campaigns }) {
   });
   const tracksFor = character => defaults.map(base => {
     const saved = (character.tracks || []).find(track => track.id === base.id || String(track.name || '').toLowerCase() === base.name.toLowerCase());
-    return saved ? { ...base, ...saved } : base;
+    const merged = saved ? { ...base, ...saved } : base;
+    if (base.id === 'vida' && merged.maxOverride !== true) {
+      const calculated = derived({ stats: character.stats || {}, district: character.district || '' }).hpMax;
+      return calculated === null ? { ...merged, masterPendingMax: true } : { ...merged, max: calculated, masterPendingMax: false };
+    }
+    return { ...merged, masterPendingMax: false };
   });
   const updateTrack = (characterId, trackId, patch) => setCharacters(items => items.map(character => {
     if (character.id !== characterId) return character;
@@ -129,9 +134,9 @@ function MasterPanel({ characters, setCharacters, campaigns }) {
           const max = Math.max(1, Number(track.max) || 10);
           const percent = Math.max(0, Math.min(100, current / max * 100));
           return <div className="master-status" key={track.id}>
-            <div className="master-status-top"><strong>{track.name}</strong><span>{current} / {max}</span></div>
+            <div className="master-status-top"><strong>{track.name}</strong><span>{current} / {track.masterPendingMax ? 'Pendente' : max}</span></div>
             <div className="master-status-bar"><i style={{width:percent+'%'}}/></div>
-            <div className="master-status-edit"><label>Atual<input type="number" value={track.current ?? 0} onChange={e => updateTrack(character.id, track.id, {current:e.target.value})}/></label><label>Máximo<input type="number" value={track.max ?? 10} onChange={e => updateTrack(character.id, track.id, {max:e.target.value,maxOverride:true})}/></label><div><button type="button" onClick={() => updateTrack(character.id, track.id, {current:Math.max(0,current-1)})} aria-label={'Diminuir '+track.name}>−</button><button type="button" onClick={() => updateTrack(character.id, track.id, {current:Math.min(max,current+1)})} aria-label={'Aumentar '+track.name}>+</button></div></div>
+            <div className="master-status-edit"><label>Atual<input type="number" value={track.current ?? 0} onChange={e => updateTrack(character.id, track.id, {current:e.target.value})}/></label><label>Máximo<input type="number" value={track.masterPendingMax ? '' : (track.max ?? 10)} placeholder={track.masterPendingMax ? 'Pendente' : ''} onChange={e => updateTrack(character.id, track.id, {max:e.target.value,maxOverride:true})}/></label><div><button type="button" onClick={() => updateTrack(character.id, track.id, {current:Math.max(0,current-1)})} aria-label={'Diminuir '+track.name}>−</button><button type="button" onClick={() => updateTrack(character.id, track.id, {current:Math.min(max,current+1)})} aria-label={'Aumentar '+track.name}>+</button></div></div>
           </div>;
         })}</div>
         <div className="master-extra-grid">
