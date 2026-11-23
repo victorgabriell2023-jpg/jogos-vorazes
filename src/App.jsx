@@ -49,7 +49,7 @@ function EditableValues({ title, values = {}, onChange }) {
 }
 
 
-function StatusTracks({ tracks = [], stats = {}, district = '', onChange }) {
+function StatusTracks({ tracks = [], stats = {}, district = '', capacityOverride, onCapacityOverride, onChange }) {
   const defaults = [
     {id:'vida',name:'Vida',current:16,max:16,autoMax:true},
     {id:'fome',name:'Fome',current:0,max:10,autoMax:true},
@@ -79,7 +79,7 @@ function StatusTracks({ tracks = [], stats = {}, district = '', onChange }) {
         {isStandard && overridden && <div className="status-track-foot">Limite substituído manualmente. <button type="button" className="text-button" onClick={() => restore(index)}>Restaurar 10</button></div>}
       </div>;
     })}
-    <div className="status-capacity"><span>Capacidade de inventário calculada</span><strong>{calculated.carry} espaços</strong><small>6 + (Força × 2). Atualizado automaticamente ao alterar Força.</small></div>
+    <div className="status-capacity"><span>Capacidade de inventário</span><label>Espaços<input type="number" value={capacityOverride ?? calculated.carry} onChange={e => onCapacityOverride(e.target.value)}/></label><small>{capacityOverride !== undefined && capacityOverride !== null ? "Valor definido manualmente." : "Automático: 6 + (Força × 2)."}</small>{capacityOverride !== undefined && capacityOverride !== null && <button type="button" className="text-button" onClick={() => onCapacityOverride(null)}>Restaurar cálculo</button>}</div>
   </div>;
 }
 function EditableItems({ title, items = [], onChange }) {
@@ -322,7 +322,7 @@ export default function App() {
           <div className="fields"><label>Nome<input value={active.name} onChange={e => updateCharacter({name:e.target.value})}/></label><div className="two"><label>Distrito<input value={active.district} onChange={e => updateCharacter({district:e.target.value})} placeholder="Ex.: 3"/></label><label>Idade<input value={active.age} onChange={e => updateCharacter({age:e.target.value})} placeholder="Idade"/></label></div><label>História<textarea value={active.story} onChange={e => updateCharacter({story:e.target.value})} placeholder="Conte a história do personagem..."/></label><label>Aparência<textarea value={active.appearance || ''} onChange={e => updateCharacter({appearance:e.target.value})} placeholder="Descreva características visuais, roupas, marcas e detalhes do tributo..."/></label><p className="note">Ficha totalmente editável. Os cálculos podem ser ajustados manualmente; os limites e valores iniciais ainda não definidos pelo manual ficam sob controle do mestre.</p>
             <EditableValues title="Atributos" values={active.stats} onChange={stats => updateCharacter({stats})}/>
             <EditableValues title="Perícias" values={active.skills} onChange={skills => updateCharacter({skills})}/>
-            <StatusTracks tracks={active.tracks || []} stats={active.stats || {}} district={active.district || ""} onChange={tracks => updateCharacter({tracks})}/>
+            <StatusTracks tracks={active.tracks || []} stats={active.stats || {}} district={active.district || ""} capacityOverride={active.carryOverride} onCapacityOverride={carryOverride => updateCharacter({carryOverride})} onChange={tracks => updateCharacter({tracks})}/>
             <EditableItems title="Inventário" items={active.inventory} onChange={inventory => updateCharacter({inventory})}/>
             <EditableItems title="Condições" items={active.conditions} onChange={conditions => updateCharacter({conditions})}/>
             <div className="custom-section history-section">
