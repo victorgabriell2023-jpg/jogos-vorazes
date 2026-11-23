@@ -461,7 +461,7 @@ export default function App() {
       <div className="brand"><div className="seal"><CapitolEmblem size={31}/></div><div><span>ARQUIVOS DA CAPITAL</span><strong>JOGOS VORAZES</strong></div></div>
       <div className="season-label">COMPANION DE RPG</div>
       <nav className="app-navigation" aria-label="Navegação principal">{nav.map(([label, key, Icon]) => <button key={key} aria-current={page === key ? 'page' : undefined} title={label} className={page === key ? 'nav-item active' : 'nav-item'} onClick={() => { setPage(key); setSelected(null); }}><Icon size={17}/><span className="nav-label">{label}</span><ChevronRight size={14}/></button>)}</nav>
-      <div className="sidebar-bottom"><span>QUE A SORTE ESTEJA</span><b>SEMPRE A SEU FAVOR.</b><small>VERSÃO 0.1 · EM DESENVOLVIMENTO</small></div>
+      <div className="sidebar-bottom"><span>QUE A SORTE ESTEJA</span><b>SEMPRE A SEU FAVOR.</b><small>VERSÃO 0.2 · EM DESENVOLVIMENTO</small></div>
     </aside>
     <main className="main">
       <header className="topbar"><div><span className="eyebrow">PANEM / REGISTRO CENTRAL</span><h1>{active ? active.name : title}</h1></div><div className="top-actions"><span className="status-dot"/> DADOS SALVOS LOCALMENTE</div></header>
