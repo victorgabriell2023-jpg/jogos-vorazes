@@ -395,3 +395,26 @@ button:active{transform:translateY(0) scale(.99)}
   .tribute-seal{display:none}
   .tribute-identity:after{font-size:5px;right:8px;top:5px;letter-spacing:1px}
 }
+
+/* Manual d20 integrado */
+.rules-workbench{max-width:1120px}
+.rules-version{font-size:8px;letter-spacing:2px;color:#c8a56c;border:1px solid rgba(200,165,108,.4);padding:9px 12px}
+.rules-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:16px 0}
+.rules-grid>.custom-section h4{display:flex;align-items:center;gap:9px;margin:0 0 12px}
+.rules-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.rules-two label,.rule-line{display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:10px;color:#cbbd9f}
+.rules-two select,.rules-two input,.rule-line input{min-width:0;max-width:130px;background:#171614;border:1px solid rgba(190,160,105,.25);color:#eee3d0;padding:8px;border-radius:3px}
+.rule-line{min-height:35px;border-bottom:1px solid rgba(190,160,105,.1)}
+.rule-line input{width:58px;text-align:center}
+.rule-line b{min-width:25px;text-align:right;color:#d7b77e}
+.rule-total{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid rgba(190,160,105,.13);font-size:10px;color:#bdb19d}
+.rule-total strong{color:#ead6b1;text-align:right}
+.roll-result{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;margin:14px 0;padding:14px;border:1px solid rgba(190,160,105,.35);background:rgba(0,0,0,.2)}
+.roll-result span,.roll-result small{font-size:9px;color:#b6a88f}
+.roll-result>strong{grid-column:2;grid-row:1/3;font:700 36px 'Cormorant Garamond';color:#e5c78f}
+.roll-result>b{font-size:10px;color:#d8b477;letter-spacing:1px}
+.difficulty-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:12px}
+.difficulty-list span{display:flex;justify-content:space-between;padding:7px;background:rgba(0,0,0,.16);font-size:9px;color:#bdb19d}
+.difficulty-list b{color:#e3c58d}
+.rules-footnote{font-size:9px;color:#8f8677;line-height:1.7;margin:18px 0}
+@media(max-width:700px){.rules-grid{grid-template-columns:1fr}.rules-two{grid-template-columns:1fr}.rules-two select,.rules-two input{max-width:none;width:100%}.rules-version{font-size:7px;padding:7px}.rule-line{font-size:9px}}
