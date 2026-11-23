@@ -8,7 +8,7 @@ export const DISTRICT_MODIFIERS = {
 export const DISTRICT_HP = {1:1,2:2,3:0,4:1,5:0,6:0,7:1,8:0,9:0,10:1,11:1,12:1};
 export const DIFFICULTIES = [['Muito fácil',6],['Fácil',9],['Moderada',12],['Difícil',15],['Muito difícil',18],['Extrema',21],['Excepcional',24]];
 export const TRAINING_WEIGHTS = [
-  {name:'Combate e capacidade física',weight:30,skills:['Combate','Atletismo','Arremesso']},
+  {name:'Preparação física e provas',weight:30,skills:['Combate','Atletismo','Arremesso']},
   {name:'Criatividade e improvisação',weight:20,skills:['Improvisação','Furtividade','Enganação']},
   {name:'Inteligência e conhecimento',weight:20,skills:['Engenharia','Percepção','Conhecimento de Plantas','Conhecimento de Animais']},
   {name:'Sobrevivência e adaptação',weight:20,skills:['Sobrevivência','Caça','Rastreamento','Primeiros Socorros']},
