@@ -111,7 +111,7 @@ const districtVisuals = {
   13: { query: 'underground bunker concrete architecture', label: 'Subsolo e concreto' }
 };
 
-const CAPITOL_ANTHEM = '/Horn%20of%20Plenty%20-%20Anthem%20of%20the%20Unified%20Districts%20of%20Panem.mp3';
+const CAPITOL_ANTHEM = `${import.meta.env.BASE_URL}Horn%20of%20Plenty%20-%20Anthem%20of%20the%20Unified%20Districts%20of%20Panem.mp3`;
 
 const nav = [
   ['Visão geral', 'overview', Flag], ['Personagens', 'characters', Users],
@@ -349,7 +349,7 @@ export default function App() {
         <EditableItems title="Acontecimentos na arena" items={arena.events || []} onChange={events => setArena(a => ({...a,events}))}/>
         <label className="arena-field">Observações livres<textarea value={arena.notes || ''} onChange={e => setArena(a => ({...a,notes:e.target.value}))} placeholder="Anotações do mestre e informações descobertas..."/></label>
       </section>}
-      {page === 'rules' && <RulesPanel characters={characters} setCharacters={setCharacters}/ >}
+      {page === 'rules' && <RulesPanel characters={characters} setCharacters={setCharacters}/>}
       {page === 'settings' && <section className="content">
         <div className="section-heading"><div><span className="eyebrow">PREFERÊNCIAS DO APLICATIVO</span><h3>Personalização</h3></div><Palette size={22}/></div>
         <div className="settings-card theme-settings">
