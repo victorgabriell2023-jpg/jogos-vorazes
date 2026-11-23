@@ -61,6 +61,28 @@ function EditableItems({ title, items = [], onChange }) {
     </div>)}
   </div>;
 }
+
+const districtThemes = {
+  1: { name: 'Luxo da Capital', accent: '#d8b76e', deep: '#45351e', note: 'Elegância, metais dourados e vitrines sofisticadas.' },
+  2: { name: 'Pedra & Mármore', accent: '#b9b7ad', deep: '#373a3b', note: 'Pedra clara, aço e arquitetura monumental.' },
+  3: { name: 'Circuitos & Neon', accent: '#55b9b0', deep: '#173b3c', note: 'Circuitos, telas e luzes tecnológicas.' },
+  4: { name: 'Marés & Sal', accent: '#65a9bd', deep: '#193c4b', note: 'Azuis oceânicos, redes e texturas marítimas.' },
+  5: { name: 'Energia', accent: '#e0bd55', deep: '#514019', note: 'Luz elétrica, cobre e estruturas industriais.' },
+  6: { name: 'Asfalto & Movimento', accent: '#9ca7b4', deep: '#303b49', note: 'Metal escovado, concreto e linhas de transporte.' },
+  7: { name: 'Madeira & Floresta', accent: '#91a66a', deep: '#30402a', note: 'Verdes profundos, madeira e marcas de corte.' },
+  8: { name: 'Fios & Tecidos', accent: '#bd7895', deep: '#492b3a', note: 'Tramas, costuras e padrões têxteis.' },
+  9: { name: 'Campos de Grãos', accent: '#c7a45c', deep: '#49391f', note: 'Dourado de trigo, juta e tons de terra.' },
+  10: { name: 'Ferro & Pecuária', accent: '#b77d55', deep: '#4a3024', note: 'Couro, ferragens e tons quentes de celeiro.' },
+  11: { name: 'Colheita', accent: '#86a56a', deep: '#2e402a', note: 'Verde de plantação, folhas e terra fértil.' },
+  12: { name: 'Carvão & Cinzas', accent: '#a87967', deep: '#3e2d2a', note: 'Carvão, fuligem e madeira escurecida.' },
+  13: { name: 'Subsolo', accent: '#9b91b8', deep: '#302b43', note: 'Grafite, concreto frio e luz subterrânea.' }
+};
+function getDistrictTheme(value) {
+  const match = String(value || '').match(/\\d+/);
+  const number = match ? Number(match[0]) : 0;
+  return districtThemes[number] ? { number, ...districtThemes[number] } : null;
+}
+
 const nav = [
   ['Visão geral', 'overview', Flag], ['Personagens', 'characters', Users],
   ['Campanhas', 'campaigns', BookOpen], ['Sessões', 'games', Swords],
@@ -103,10 +125,10 @@ export default function App() {
         <div className="hero"><div className="hero-copy"><span className="eyebrow">O REGISTRO COMEÇA AQUI</span><h2>Que os jogos<br/><em>comecem.</em></h2><p>Organize seus tributos, campanhas e sessões em um só lugar. Este espaço será moldado pelo sistema de regras da sua mesa.</p><button className="primary" onClick={addCharacter}><Plus size={16}/> Criar personagem</button></div><div className="mock-seal"><Bird size={116}/><span>CAPITÓLIO</span></div></div>
         <div className="stats-row"><div className="stat-card"><span>TRIBUTOS REGISTRADOS</span><strong>{characters.length}</strong><small>Personagens cadastrados</small></div><div className="stat-card"><span>CAMPANHAS</span><strong>{campaigns.length}</strong><small>Histórias em andamento</small></div><div className="stat-card"><span>SESSÕES REGISTRADAS</span><strong>{sessions.length}</strong><small>Encontros documentados</small></div></div>
         <div className="section-heading"><div><span className="eyebrow">ACESSO RÁPIDO</span><h3>Seus registros</h3></div><button className="text-button" onClick={() => setPage('characters')}>Ver personagens <ChevronRight size={15}/></button></div>
-        {characters.length ? <div className="character-grid">{characters.slice(0,3).map(c => <button className="character-card" key={c.id} onClick={() => {setSelected(c.id);setPage('characters')}}><div className="avatar"><Users size={25}/></div><span>{c.district || 'DISTRITO NÃO DEFINIDO'}</span><strong>{c.name}</strong><small>ABRIR FICHA <ChevronRight size={13}/></small></button>)}</div> : <div className="empty">Nenhum tributo registrado. Crie o primeiro personagem para começar.</div>}
+        {characters.length ? <div className="character-grid">{characters.slice(0,3).map(c => <button className="character-card" key={c.id} style={getDistrictTheme(c.district) ? {'--district-accent':getDistrictTheme(c.district).accent,'--district-deep':getDistrictTheme(c.district).deep} : {}} onClick={() => {setSelected(c.id);setPage('characters')}}><div className="avatar"><Users size={25}/></div><span>{c.district || 'DISTRITO NÃO DEFINIDO'}</span><strong>{c.name}</strong><small>ABRIR FICHA <ChevronRight size={13}/></small></button>)}</div> : <div className="empty">Nenhum tributo registrado. Crie o primeiro personagem para começar.</div>}
       </section>}
       {page === 'characters' && <section className="content">
-        {active ? <><button className="back" onClick={() => setSelected(null)}>← Todos os personagens</button><div className="editor">
+        {active ? <><button className="back" onClick={() => setSelected(null)}>← Todos os personagens</button>{(() => { const theme = getDistrictTheme(active.district); return <div className="district-profile" style={theme ? {'--district-accent':theme.accent,'--district-deep':theme.deep} : {}}><div className="district-profile-top"><span className="eyebrow">IDENTIDADE DO DISTRITO {theme ? theme.number : ''}</span><strong>{theme ? theme.name : 'Distrito não definido'}</strong></div><p>{theme ? theme.note : 'Informe o número do distrito para aplicar sua identidade visual.'}</p></div>; })()}<div className="editor">
           <div className="portrait"><>{active.image ? <img className="portrait-image" src={active.image} alt="Retrato do personagem" onError={e => { e.currentTarget.style.display = 'none'; }}/> : <div className="avatar large"><Users size={38}/></div>}</><label className="upload">URL do retrato<input value={active.image || ''} onChange={e => updateCharacter({image:e.target.value})} placeholder="Cole um link de imagem"/></label></div>
           <div className="fields"><label>Nome<input value={active.name} onChange={e => updateCharacter({name:e.target.value})}/></label><div className="two"><label>Distrito<input value={active.district} onChange={e => updateCharacter({district:e.target.value})} placeholder="Ex.: 3"/></label><label>Idade<input value={active.age} onChange={e => updateCharacter({age:e.target.value})} placeholder="Idade"/></label></div><label>História<textarea value={active.story} onChange={e => updateCharacter({story:e.target.value})} placeholder="Conte a história do personagem..."/></label><p className="note">Campos livres para organizar a ficha. Os nomes e valores são editáveis; as regras e cálculos oficiais serão adicionados depois de recebermos o livro.</p>
             <EditableValues title="Atributos" values={active.stats} onChange={stats => updateCharacter({stats})}/>
@@ -115,7 +137,7 @@ export default function App() {
             <EditableItems title="Inventário" items={active.inventory} onChange={inventory => updateCharacter({inventory})}/>
             <EditableItems title="Condições" items={active.conditions} onChange={conditions => updateCharacter({conditions})}/>
             <button className="danger" onClick={() => {setCharacters(items => items.filter(c => c.id !== active.id));setSelected(null)}}><Trash2 size={15}/> Excluir personagem</button></div>
-        </div></> : <><div className="section-heading"><div><span className="eyebrow">CADASTRO DE TRIBUTOS</span><h3>Personagens</h3></div><button className="primary" onClick={addCharacter}><Plus size={16}/> Novo personagem</button></div><div className="search"><Search size={16}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar personagem..."/></div><div className="character-grid">{filtered.map(c => <button className="character-card" key={c.id} onClick={() => setSelected(c.id)}><div className="avatar"><Users size={25}/></div><span>{c.district || 'DISTRITO NÃO DEFINIDO'}</span><strong>{c.name}</strong><small>EDITAR FICHA <ChevronRight size={13}/></small></button>)}</div></>}
+        </div></> : <><div className="section-heading"><div><span className="eyebrow">CADASTRO DE TRIBUTOS</span><h3>Personagens</h3></div><button className="primary" onClick={addCharacter}><Plus size={16}/> Novo personagem</button></div><div className="search"><Search size={16}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar personagem..."/></div><div className="character-grid">{filtered.map(c => <button className="character-card" key={c.id} style={getDistrictTheme(c.district) ? {'--district-accent':getDistrictTheme(c.district).accent,'--district-deep':getDistrictTheme(c.district).deep} : {}} onClick={() => setSelected(c.id)}><div className="avatar"><Users size={25}/></div><span>{c.district || 'DISTRITO NÃO DEFINIDO'}</span><strong>{c.name}</strong><small>EDITAR FICHA <ChevronRight size={13}/></small></button>)}</div></>}
       </section>}
       {page === 'campaigns' && <section className="content"><div className="section-heading"><div><span className="eyebrow">HISTÓRIAS DE PANEM</span><h3>Campanhas</h3></div><button className="primary" onClick={addCampaign}><Plus size={16}/> Nova campanha</button></div>
         {campaigns.map(c => <article className="campaign-card" key={c.id}>
