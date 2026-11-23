@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import RulesPanel from './RulesPanel.jsx';
+import { derived } from './rules.js';
 import { BookOpen, Users, Flag, Swords, Settings, Plus, Search, Bird, ChevronRight, Trash2, Download, Upload, MapPin, Palette, History, Image as ImageIcon } from 'lucide-react';
 
 function CapitolEmblem({ size = 28 }) {
@@ -48,19 +49,39 @@ function EditableValues({ title, values = {}, onChange }) {
 }
 
 
-function StatusTracks({ tracks = [], onChange }) {
-  const update = (index, patch) => onChange(tracks.map((track, i) => i === index ? { ...track, ...patch } : track));
+function StatusTracks({ tracks = [], stats = {}, district = '', onChange }) {
+  const defaults = [
+    {id:'vida',name:'Vida',current:16,max:16,autoMax:true},
+    {id:'fome',name:'Fome',current:0,max:10,autoMax:true},
+    {id:'sede',name:'Sede',current:0,max:10,autoMax:true},
+    {id:'cansaco',name:'Cansaço',current:0,max:10,autoMax:true},
+    {id:'temperatura',name:'Temperatura',current:0,max:10,autoMax:false}
+  ];
+  const rows = tracks.length ? tracks : defaults;
+  const calculated = derived({stats,district});
+  const update = (index, patch) => onChange(rows.map((track, i) => i === index ? { ...track, ...patch } : track));
+  const restore = index => update(index, { maxOverride:false, autoMax:true, max: rows[index].id === 'vida' ? (calculated.hpMax ?? rows[index].max) : 10 });
   return <div className="custom-section status-workbench">
-    <div className="custom-heading"><h4>Estado físico e necessidades</h4><button type="button" className="text-button" onClick={() => onChange([...tracks, { id: Date.now(), name: 'Novo marcador', current: 0, max: 10 }])}><Plus size={14}/> Adicionar marcador</button></div>
-    <p className="muted">Acompanhe vida, fome, sede, cansaço e temperatura. Barras, valores, nomes e limites podem ser editados livremente pelo mestre.</p>
-    {tracks.map((track, index) => { const current=Number(track.current)||0, max=Math.max(0,Number(track.max)||0), pct=max>0?Math.max(0,Math.min(100,current/max*100)):0; return <div className="status-track-card" key={track.id || index}>
-      <div className="status-track-head"><input aria-label="Nome do marcador" value={track.name} onChange={e => update(index, { name: e.target.value })}/><button type="button" className="icon-button" onClick={() => onChange(tracks.filter((_, i) => i !== index))} aria-label="Excluir marcador"><Trash2 size={14}/></button></div>
-      <div className="status-track-bar"><span style={{width:pct+'%'}}/></div>
-      <div className="status-track-values"><label>Atual<input type="number" value={track.current} onChange={e => update(index, { current: e.target.value })}/></label><label>Máximo<input type="number" value={track.max} onChange={e => update(index, { max: e.target.value })}/></label></div>
-    </div>; })}
+    <div className="custom-heading"><h4>Estado físico e necessidades</h4><button type="button" className="text-button" onClick={() => onChange([...rows, { id: Date.now(), name: 'Novo marcador', current: 0, max: 10, autoMax:false }])}><Plus size={14}/> Adicionar marcador</button></div>
+    <p className="muted">Vida, fome, sede e cansaço seguem os valores do sistema. Temperatura e marcadores extras ficam configuráveis. Você pode substituir qualquer máximo e restaurar o cálculo quando quiser.</p>
+    {rows.map((track, index) => {
+      const isLife = track.id === 'vida' || track.name?.toLowerCase() === 'vida';
+      const isStandard = ['fome','sede','cansaco'].includes(track.id);
+      const formulaMax = isLife ? calculated.hpMax : (isStandard ? 10 : null);
+      const overridden = track.maxOverride === true;
+      const maxValue = overridden || formulaMax === null ? track.max : formulaMax;
+      const current=Number(track.current)||0, max=Math.max(0,Number(maxValue)||0), pct=max>0?Math.max(0,Math.min(100,current/max*100)):0;
+      return <div className="status-track-card" key={track.id || index}>
+        <div className="status-track-head"><input aria-label="Nome do marcador" value={track.name} onChange={e => update(index, { name: e.target.value })}/><button type="button" className="icon-button" onClick={() => onChange(rows.filter((_, i) => i !== index))} aria-label="Excluir marcador"><Trash2 size={14}/></button></div>
+        <div className="status-track-bar"><span style={{width:pct+'%'}}/></div>
+        <div className="status-track-values"><label>Atual<input type="number" value={track.current} onChange={e => update(index, { current: e.target.value })}/></label><label>Máximo<input type="number" value={maxValue ?? ''} placeholder={isLife && calculated.hpMax === null ? 'Pendente' : '—'} onChange={e => update(index, { max: e.target.value, maxOverride:true })}/></label></div>
+        {isLife && <div className="status-track-foot">{overridden ? 'Máximo definido manualmente.' : calculated.hpMax === null ? 'Cálculo pendente: defina um distrito de 1 a 12 (bônus do Distrito 13 ainda não definido).' : 'Automático: 16 + (Vigor × 2) + bônus do Distrito = ' + calculated.hpMax + ' PV.'}{overridden && <button type="button" className="text-button" onClick={() => restore(index)}>Restaurar cálculo</button>}</div>}
+        {isStandard && overridden && <div className="status-track-foot">Limite substituído manualmente. <button type="button" className="text-button" onClick={() => restore(index)}>Restaurar 10</button></div>}
+      </div>;
+    })}
+    <div className="status-capacity"><span>Capacidade de inventário calculada</span><strong>{calculated.carry} espaços</strong><small>6 + (Força × 2). Atualizado automaticamente ao alterar Força.</small></div>
   </div>;
 }
-
 function EditableItems({ title, items = [], onChange }) {
   const update = (index, value) => onChange(items.map((item, i) => i === index ? value : item));
   return <div className="custom-section">
@@ -301,7 +322,7 @@ export default function App() {
           <div className="fields"><label>Nome<input value={active.name} onChange={e => updateCharacter({name:e.target.value})}/></label><div className="two"><label>Distrito<input value={active.district} onChange={e => updateCharacter({district:e.target.value})} placeholder="Ex.: 3"/></label><label>Idade<input value={active.age} onChange={e => updateCharacter({age:e.target.value})} placeholder="Idade"/></label></div><label>História<textarea value={active.story} onChange={e => updateCharacter({story:e.target.value})} placeholder="Conte a história do personagem..."/></label><label>Aparência<textarea value={active.appearance || ''} onChange={e => updateCharacter({appearance:e.target.value})} placeholder="Descreva características visuais, roupas, marcas e detalhes do tributo..."/></label><p className="note">Ficha totalmente editável. Os cálculos podem ser ajustados manualmente; os limites e valores iniciais ainda não definidos pelo manual ficam sob controle do mestre.</p>
             <EditableValues title="Atributos" values={active.stats} onChange={stats => updateCharacter({stats})}/>
             <EditableValues title="Perícias" values={active.skills} onChange={skills => updateCharacter({skills})}/>
-            <StatusTracks tracks={active.tracks || []} onChange={tracks => updateCharacter({tracks})}/>
+            <StatusTracks tracks={active.tracks || []} stats={active.stats || {}} district={active.district || ""} onChange={tracks => updateCharacter({tracks})}/>
             <EditableItems title="Inventário" items={active.inventory} onChange={inventory => updateCharacter({inventory})}/>
             <EditableItems title="Condições" items={active.conditions} onChange={conditions => updateCharacter({conditions})}/>
             <div className="custom-section history-section">
