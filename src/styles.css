@@ -50,3 +50,11 @@
 .district-profile-top .eyebrow{color:var(--district-accent,#a99c82)}
 .district-profile-top strong{font:600 23px 'Cormorant Garamond';color:var(--district-accent,#e8ddc8)}
 .district-profile p{margin:8px 0 0;color:#c0b8a9;font-size:11px;line-height:1.6}
+
+
+.photo-picker{display:block;margin:0 0 15px;cursor:pointer}
+.photo-picker input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
+.photo-picker span{display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 9px;background:#9d2930;border:1px solid #b24c4f;color:#fff1df;font:600 10px 'DM Sans';text-align:center}
+.photo-picker:hover span{background:#b5363e}
+.photo-picker input:focus-visible+span{outline:2px solid #e0bd55;outline-offset:3px}
+.remove-photo{margin-top:8px;color:#d28a88}
