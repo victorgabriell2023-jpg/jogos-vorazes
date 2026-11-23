@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { BookOpen, Users, Flag, Swords, Settings, Plus, Search, Bird, ChevronRight, Trash2, Download, Upload, MapPin, Palette, History, Image as ImageIcon } from 'lucide-react';
 
 function CapitolEmblem({ size = 28 }) {
@@ -110,40 +110,7 @@ const districtVisuals = {
   13: { query: 'underground bunker concrete architecture', label: 'Subsolo e concreto' }
 };
 
-function playCapitolSignal() {
-  try {
-    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-    if (!AudioContextClass) return;
-    const context = new AudioContextClass();
-    const master = context.createGain();
-    master.gain.setValueAtTime(0.0001, context.currentTime);
-    master.gain.exponentialRampToValueAtTime(0.12, context.currentTime + 0.18);
-    master.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 2.5);
-    master.connect(context.destination);
-    const notes = [
-      { frequency: 392, at: 0.05, duration: 1.5 },
-      { frequency: 523.25, at: 0.42, duration: 1.55 },
-      { frequency: 659.25, at: 0.82, duration: 1.45 },
-      { frequency: 783.99, at: 1.18, duration: 1.25 }
-    ];
-    notes.forEach(note => {
-      const oscillator = context.createOscillator();
-      const envelope = context.createGain();
-      oscillator.type = 'sine';
-      oscillator.frequency.value = note.frequency;
-      envelope.gain.setValueAtTime(0.0001, context.currentTime + note.at);
-      envelope.gain.exponentialRampToValueAtTime(0.22, context.currentTime + note.at + 0.06);
-      envelope.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + note.at + note.duration);
-      oscillator.connect(envelope);
-      envelope.connect(master);
-      oscillator.start(context.currentTime + note.at);
-      oscillator.stop(context.currentTime + note.at + note.duration + 0.05);
-    });
-    window.setTimeout(() => context.close().catch(() => {}), 3000);
-  } catch {
-    // Alguns navegadores só permitem áudio depois de uma interação do usuário.
-  }
-}
+const CAPITOL_ANTHEM = '/Horn%20of%20Plenty%20-%20Anthem%20of%20the%20Unified%20Districts%20of%20Panem.mp3';
 
 const nav = [
   ['Visão geral', 'overview', Flag], ['Personagens', 'characters', Users],
@@ -165,6 +132,35 @@ export default function App() {
   const [importStatus, setImportStatus] = useState('');
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState('');
+  const openingAudio = useRef(null);
+  const fadeTimer = useRef(null);
+  const startOpeningAudio = () => {
+    if (fadeTimer.current) window.clearTimeout(fadeTimer.current);
+    if (!openingAudio.current) {
+      openingAudio.current = new Audio(CAPITOL_ANTHEM);
+      openingAudio.current.preload = 'auto';
+    }
+    const audio = openingAudio.current;
+    audio.pause();
+    audio.currentTime = 0;
+    audio.volume = 1;
+    audio.play().then(() => {
+      fadeTimer.current = window.setTimeout(() => {
+        const fadeStarted = Date.now();
+        const fade = window.setInterval(() => {
+          const progress = Math.min(1, (Date.now() - fadeStarted) / 2000);
+          audio.volume = Math.max(0, 1 - progress);
+          if (progress >= 1) {
+            window.clearInterval(fade);
+            audio.pause();
+            audio.currentTime = 0;
+          }
+        }, 40);
+      }, 10000);
+    }).catch(() => {
+      // Alguns navegadores exigem uma interação antes de liberar a reprodução.
+    });
+  };
   useEffect(() => localStorage.setItem('hv-characters', JSON.stringify(characters)), [characters]);
   useEffect(() => localStorage.setItem('hv-campaigns', JSON.stringify(campaigns)), [campaigns]);
   useEffect(() => localStorage.setItem('hv-sessions', JSON.stringify(sessions)), [sessions]);
@@ -192,8 +188,11 @@ export default function App() {
   }, []);
   useEffect(() => {
     if (settings.soundEnabled === false) return;
-    const timer = window.setTimeout(playCapitolSignal, 450);
-    return () => window.clearTimeout(timer);
+    const timer = window.setTimeout(startOpeningAudio, 450);
+    return () => {
+      window.clearTimeout(timer);
+      if (fadeTimer.current) window.clearTimeout(fadeTimer.current);
+    };
   }, []);
   const active = characters.find(c => c.id === selected);
   const activeDistrictTheme = getDistrictTheme(active?.district);
@@ -359,7 +358,7 @@ export default function App() {
           <label className="arena-field">Imagem adicional de fundo (opcional)<input value={settings.backgroundImage || ''} onChange={e => setSettings(s => ({...s,backgroundImage:e.target.value}))} placeholder="Cole um link de imagem para personalizar ainda mais"/></label>
           <button className="text-button" onClick={() => setSettings({theme:'capital',accent:'theme',backgroundImage:''})}>Restaurar identidade da Capital</button>
         </div>
-        <div className="settings-card sound-settings"><h4>Som de abertura da Capital</h4><p>Uma assinatura sonora original, criada para este aplicativo, com clima cerimonial e futurista. O navegador pode exigir uma interação para liberar o áudio na primeira vez.</p><div className="sound-actions"><label className="sound-toggle"><input type="checkbox" checked={settings.soundEnabled !== false} onChange={e => { setSettings(s => ({...s,soundEnabled:e.target.checked})); if (e.target.checked) playCapitolSignal(); }}/> Tocar ao abrir o aplicativo</label><button type="button" className="text-button" onClick={playCapitolSignal}>▶ Testar som</button></div><small>O áudio não é a trilha original do filme; é um efeito próprio para evitar usar material protegido sem autorização.</small></div>
+        <div className="settings-card sound-settings"><h4>Hino de Panem • Abertura da Capital</h4><p>O hino toca ao abrir o aplicativo: volume normal nos primeiros 10 segundos e redução gradual nos 2 segundos seguintes, até silenciar. A reprodução não reinicia ao trocar de tela.</p><div className="sound-actions"><label className="sound-toggle"><input type="checkbox" checked={settings.soundEnabled !== false} onChange={e => { setSettings(s => ({...s,soundEnabled:e.target.checked})); if (e.target.checked) startOpeningAudio(); else if (openingAudio.current) { openingAudio.current.pause(); openingAudio.current.currentTime = 0; if (fadeTimer.current) window.clearTimeout(fadeTimer.current); } }}/> Tocar ao abrir o aplicativo</label><button type="button" className="text-button" onClick={startOpeningAudio}>▶ Testar abertura</button></div><small>Faixa de áudio armazenada localmente no aplicativo.</small></div>
         <div className="settings-card"><h4><Download size={17}/> Backup e transferência</h4><p>Exporte personagens, campanhas, sessões, Arena e preferências em um arquivo JSON. Para recuperar ou transferir, importe esse arquivo em outro navegador.</p><div className="backup-actions"><button className="primary" onClick={exportBackup}><Download size={15}/> Exportar backup</button><label className="primary file-import"><Upload size={15}/> Importar backup<input type="file" accept="application/json,.json" onChange={e => {importBackup(e.target.files?.[0]);e.target.value='';}}/></label></div>{importStatus && <p className="backup-status">{importStatus}</p>}</div>
         <div className="settings-card"><h4>Sobre o salvamento</h4><p>Os dados são guardados neste navegador e neste dispositivo. O backup permite transportar os registros manualmente, mas ainda não existe sincronização automática na nuvem.</p></div>
       </section>}
