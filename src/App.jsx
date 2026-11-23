@@ -63,7 +63,7 @@ function EditableItems({ title, items = [], onChange }) {
 }
 const nav = [
   ['Visão geral', 'overview', Flag], ['Personagens', 'characters', Users],
-  ['Campanhas', 'campaigns', BookOpen], ['Jogos', 'games', Swords],
+  ['Campanhas', 'campaigns', BookOpen], ['Sessões', 'games', Swords],
   ['Arena', 'arena', Bird], ['Regras', 'rules', BookOpen], ['Configurações', 'settings', Settings]
 ];
 
@@ -71,10 +71,12 @@ export default function App() {
   const [page, setPage] = useState('overview');
   const [characters, setCharacters] = useState(() => readSaved('hv-characters'));
   const [campaigns, setCampaigns] = useState(() => readSaved('hv-campaigns'));
+  const [sessions, setSessions] = useState(() => readSaved('hv-sessions'));
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState('');
   useEffect(() => localStorage.setItem('hv-characters', JSON.stringify(characters)), [characters]);
   useEffect(() => localStorage.setItem('hv-campaigns', JSON.stringify(campaigns)), [campaigns]);
+  useEffect(() => localStorage.setItem('hv-sessions', JSON.stringify(sessions)), [sessions]);
   const active = characters.find(c => c.id === selected);
   const filtered = useMemo(() => characters.filter(c => c.name.toLowerCase().includes(search.toLowerCase())), [characters, search]);
   const updateCharacter = patch => setCharacters(items => items.map(c => c.id === selected ? { ...c, ...patch } : c));
@@ -84,6 +86,8 @@ export default function App() {
   };
   const addCampaign = () => setCampaigns(items => [...items, { id: Date.now(), name: 'Nova campanha', description: '', characterIds: [] }]);
   const updateCampaign = (id, patch) => setCampaigns(items => items.map(c => c.id === id ? { ...c, ...patch } : c));
+  const addSession = () => setSessions(items => [...items, { id: Date.now(), campaignId: campaigns[0]?.id || '', title: 'Nova sessão', date: new Date().toLocaleDateString('en-CA'), summary: '', events: [] }]);
+  const updateSession = (id, patch) => setSessions(items => items.map(session => session.id === id ? { ...session, ...patch } : session));
   const title = nav.find(n => n[1] === page)?.[0] || 'Visão geral';
 
   return <div className="shell">
@@ -97,7 +101,7 @@ export default function App() {
       <header className="topbar"><div><span className="eyebrow">PANEM / REGISTRO CENTRAL</span><h1>{active ? active.name : title}</h1></div><div className="top-actions"><span className="status-dot"/> DADOS SALVOS LOCALMENTE</div></header>
       {page === 'overview' && <section className="content">
         <div className="hero"><div className="hero-copy"><span className="eyebrow">O REGISTRO COMEÇA AQUI</span><h2>Que os jogos<br/><em>comecem.</em></h2><p>Organize seus tributos, campanhas e sessões em um só lugar. Este espaço será moldado pelo sistema de regras da sua mesa.</p><button className="primary" onClick={addCharacter}><Plus size={16}/> Criar personagem</button></div><div className="mock-seal"><Bird size={116}/><span>CAPITÓLIO</span></div></div>
-        <div className="stats-row"><div className="stat-card"><span>TRIBUTOS REGISTRADOS</span><strong>{characters.length}</strong><small>Personagens cadastrados</small></div><div className="stat-card"><span>CAMPANHAS</span><strong>{campaigns.length}</strong><small>Histórias em andamento</small></div><div className="stat-card"><span>SISTEMA</span><strong>—</strong><small>Aguardando livro de regras</small></div></div>
+        <div className="stats-row"><div className="stat-card"><span>TRIBUTOS REGISTRADOS</span><strong>{characters.length}</strong><small>Personagens cadastrados</small></div><div className="stat-card"><span>CAMPANHAS</span><strong>{campaigns.length}</strong><small>Histórias em andamento</small></div><div className="stat-card"><span>SESSÕES REGISTRADAS</span><strong>{sessions.length}</strong><small>Encontros documentados</small></div></div>
         <div className="section-heading"><div><span className="eyebrow">ACESSO RÁPIDO</span><h3>Seus registros</h3></div><button className="text-button" onClick={() => setPage('characters')}>Ver personagens <ChevronRight size={15}/></button></div>
         {characters.length ? <div className="character-grid">{characters.slice(0,3).map(c => <button className="character-card" key={c.id} onClick={() => {setSelected(c.id);setPage('characters')}}><div className="avatar"><Users size={25}/></div><span>{c.district || 'DISTRITO NÃO DEFINIDO'}</span><strong>{c.name}</strong><small>ABRIR FICHA <ChevronRight size={13}/></small></button>)}</div> : <div className="empty">Nenhum tributo registrado. Crie o primeiro personagem para começar.</div>}
       </section>}
@@ -120,7 +124,21 @@ export default function App() {
           <div className="campaign-members"><strong>Personagens participantes</strong>{characters.length ? characters.map(ch => <label key={ch.id}><input type="checkbox" checked={(c.characterIds || []).includes(ch.id)} onChange={e => updateCampaign(c.id, {characterIds:e.target.checked ? [...(c.characterIds || []), ch.id] : (c.characterIds || []).filter(id => id !== ch.id)})}/>{ch.name} <span>({ch.district || 'Distrito não definido'})</span></label>) : <p className="muted">Cadastre personagens para vinculá-los à campanha.</p>}</div>
         </article>)}
         {!campaigns.length && <div className="empty">Nenhuma campanha criada ainda. Crie uma para organizar a história e seus participantes.</div>}</section>}
-      {['games','arena','rules','settings'].includes(page) && <section className="content"><div className="placeholder"><div className="seal"><Bird size={30}/></div><span className="eyebrow">ÁREA EM PREPARAÇÃO</span><h2>{title}</h2><p>Esta seção será construída depois que recebermos o livro e confirmarmos as regras da campanha. Assim, o aplicativo acompanha o sistema real da mesa sem inventar mecânicas.</p></div></section>}
+      {page === 'games' && <section className="content">
+        <div className="section-heading"><div><span className="eyebrow">DIÁRIO DE PANEM</span><h3>Sessões de jogo</h3></div><button className="primary" onClick={addSession}><Plus size={16}/> Registrar sessão</button></div>
+        <p className="note">Use este espaço para documentar cada encontro da mesa. Os registros são narrativos e não dependem de regras específicas.</p>
+        {sessions.slice().sort((a,b) => (b.date || '').localeCompare(a.date || '')).map(session => <article className="session-card" key={session.id}>
+          <div className="session-heading"><input aria-label="Título da sessão" value={session.title} onChange={e => updateSession(session.id, {title:e.target.value})}/><button className="icon-button" onClick={() => setSessions(items => items.filter(x => x.id !== session.id))} aria-label="Excluir sessão"><Trash2 size={16}/></button></div>
+          <div className="session-meta">
+            <label>Data<input type="date" value={session.date || ''} onChange={e => updateSession(session.id, {date:e.target.value})}/></label>
+            <label>Campanha<select value={session.campaignId || ''} onChange={e => updateSession(session.id, {campaignId:e.target.value})}><option value="">Sem campanha vinculada</option>{campaigns.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
+          </div>
+          <label className="session-summary">Resumo do encontro<textarea value={session.summary || ''} onChange={e => updateSession(session.id, {summary:e.target.value})} placeholder="O que aconteceu nesta sessão? Como terminou?"/></label>
+          <EditableItems title="Acontecimentos importantes" items={session.events || []} onChange={events => updateSession(session.id, {events})}/>
+        </article>)}
+        {!sessions.length && <div className="empty">Nenhuma sessão registrada. Crie a primeira para começar o diário da campanha.</div>}
+      </section>}
+      {['arena','rules','settings'].includes(page) && <section className="content"><div className="placeholder"><div className="seal"><Bird size={30}/></div><span className="eyebrow">ÁREA EM PREPARAÇÃO</span><h2>{title}</h2><p>Esta seção será construída depois que recebermos o livro e confirmarmos as regras da campanha. Assim, o aplicativo acompanha o sistema real da mesa sem inventar mecânicas.</p></div></section>}
       <footer>O QUE FAZEMOS NESTA ARENA ECOA POR PANEM. <span>JOGOS VORAZES RPG</span></footer>
     </main>
   </div>;
