@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import RulesPanel from './RulesPanel.jsx';
 import { derived } from './rules.js';
-import { BookOpen, Users, Flag, Swords, Settings, Plus, Search, Bird, ChevronRight, Trash2, Download, Upload, MapPin, Palette, History, Image as ImageIcon } from 'lucide-react';
+import { BookOpen, Users, Flag, Swords, Settings, Plus, Search, Bird, ChevronRight, Trash2, Download, Upload, MapPin, Palette, History, Image as ImageIcon, ShieldCheck } from 'lucide-react';
 
 function CapitolEmblem({ size = 28 }) {
   return <svg className="capitol-emblem" width={size} height={size} viewBox="0 0 100 100" role="img" aria-label="Emblema da Capital">
@@ -82,6 +82,68 @@ function StatusTracks({ tracks = [], stats = {}, district = '', capacityOverride
     <div className="status-capacity"><span>Capacidade de inventário</span><label>Espaços<input type="number" value={capacityOverride ?? calculated.carry} onChange={e => onCapacityOverride(e.target.value)}/></label><small>{capacityOverride !== undefined && capacityOverride !== null ? "Valor definido manualmente." : "Automático: 6 + (Força × 2)."}</small>{capacityOverride !== undefined && capacityOverride !== null && <button type="button" className="text-button" onClick={() => onCapacityOverride(null)}>Restaurar cálculo</button>}</div>
   </div>;
 }
+function MasterPanel({ characters, setCharacters, campaigns }) {
+  const [campaignId, setCampaignId] = useState('all');
+  const [query, setQuery] = useState('');
+  const defaults = [
+    { id:'vida', name:'Vida', current:16, max:16 },
+    { id:'fome', name:'Fome', current:0, max:10 },
+    { id:'sede', name:'Sede', current:0, max:10 },
+    { id:'cansaco', name:'Cansaço', current:0, max:10 },
+    { id:'temperatura', name:'Temperatura', current:0, max:10 }
+  ];
+  const campaign = campaigns.find(item => String(item.id) === campaignId);
+  const roster = characters.filter(character => {
+    const inCampaign = campaignId === 'all' || (campaign?.characterIds || []).includes(character.id);
+    return inCampaign && (character.name || '').toLowerCase().includes(query.toLowerCase());
+  });
+  const tracksFor = character => defaults.map(base => {
+    const saved = (character.tracks || []).find(track => track.id === base.id || String(track.name || '').toLowerCase() === base.name.toLowerCase());
+    return saved ? { ...base, ...saved } : base;
+  });
+  const updateTrack = (characterId, trackId, patch) => setCharacters(items => items.map(character => {
+    if (character.id !== characterId) return character;
+    const tracks = tracksFor(character);
+    return { ...character, tracks: tracks.map(track => track.id === trackId ? { ...track, ...patch } : track) };
+  }));
+  const updateNotes = (characterId, masterNotes) => setCharacters(items => items.map(character => character.id === characterId ? { ...character, masterNotes } : character));
+  const updateConditions = (characterId, value) => setCharacters(items => items.map(character => character.id === characterId ? { ...character, conditions: value.split('\n').map(item => item.trim()).filter(Boolean) } : character));
+  return <section className="content master-content">
+    <div className="section-heading"><div><span className="eyebrow">ACESSO DO NARRADOR • CONTROLE DA CAMPANHA</span><h3>Painel do Mestre</h3></div><span className="master-seal"><ShieldCheck size={25}/></span></div>
+    <div className="master-intro"><div><span className="eyebrow">CENTRAL DE CONTROLE</span><h4>Todos os tributos. Um só painel.</h4><p>Confira e atualize os status de cada jogador durante a sessão. As alterações são salvas automaticamente nas fichas dos personagens.</p></div><div className="master-count"><strong>{roster.length}</strong><span>TRIBUTOS NO PAINEL</span></div></div>
+    <div className="master-toolbar">
+      <label>Campanha<select value={campaignId} onChange={e => setCampaignId(e.target.value)}><option value="all">Todos os personagens</option>{campaigns.map(item => <option key={item.id} value={String(item.id)}>{item.name || 'Campanha sem nome'}</option>)}</select></label>
+      <label className="master-search">Buscar tributo<input value={query} onChange={e => setQuery(e.target.value)} placeholder="Nome do personagem..."/></label>
+    </div>
+    {roster.length ? <div className="master-roster">{roster.map(character => {
+      const tracks = tracksFor(character);
+      const theme = getDistrictTheme(character.district);
+      return <article className="master-tribute" key={character.id} style={theme ? {'--district-accent':theme.accent,'--district-deep':theme.deep} : {}}>
+        <header className="master-tribute-head">
+          <div className="master-portrait">{character.image ? <img src={character.image} alt={'Retrato de '+character.name}/> : <div className="avatar"><Users size={25}/></div>}</div>
+          <div className="master-identity"><span className="eyebrow">DISTRITO {character.district || '—'} • {character.age || 'IDADE —'}</span><h4>{character.name || 'Tributo sem nome'}</h4><small>{theme?.name || 'Registro de tributo'}</small></div>
+          <button type="button" className="text-button" onClick={() => { window.dispatchEvent(new CustomEvent('hv-open-character', { detail: character.id })); }}>Abrir ficha ↗</button>
+        </header>
+        <div className="master-status-grid">{tracks.map(track => {
+          const current = Number(track.current) || 0;
+          const max = Math.max(1, Number(track.max) || 10);
+          const percent = Math.max(0, Math.min(100, current / max * 100));
+          return <div className="master-status" key={track.id}>
+            <div className="master-status-top"><strong>{track.name}</strong><span>{current} / {max}</span></div>
+            <div className="master-status-bar"><i style={{width:percent+'%'}}/></div>
+            <div className="master-status-edit"><label>Atual<input type="number" value={track.current ?? 0} onChange={e => updateTrack(character.id, track.id, {current:e.target.value})}/></label><label>Máximo<input type="number" value={track.max ?? 10} onChange={e => updateTrack(character.id, track.id, {max:e.target.value,maxOverride:true})}/></label><div><button type="button" onClick={() => updateTrack(character.id, track.id, {current:Math.max(0,current-1)})} aria-label={'Diminuir '+track.name}>−</button><button type="button" onClick={() => updateTrack(character.id, track.id, {current:Math.min(max,current+1)})} aria-label={'Aumentar '+track.name}>+</button></div></div>
+          </div>;
+        })}</div>
+        <div className="master-extra-grid">
+          <label>Condições atuais<textarea value={(character.conditions || []).join('\n')} onChange={e => updateConditions(character.id,e.target.value)} placeholder="Uma condição por linha..."/></label>
+          <label>Anotações privadas do mestre<textarea value={character.masterNotes || ''} onChange={e => updateNotes(character.id,e.target.value)} placeholder="Informações reservadas, consequências, segredos..."/></label>
+        </div>
+      </article>;
+    })}</div> : <div className="empty">{characters.length ? 'Nenhum tributo corresponde a esse filtro.' : 'Cadastre os personagens dos jogadores para montar o painel do mestre.'}</div>}
+    <p className="master-footnote">Os valores alterados aqui também aparecem na ficha individual do personagem. O painel é salvo neste dispositivo junto com os demais dados do aplicativo.</p>
+  </section>;
+}
+
 function EditableItems({ title, items = [], onChange }) {
   const update = (index, value) => onChange(items.map((item, i) => i === index ? value : item));
   return <div className="custom-section">
@@ -136,7 +198,7 @@ const CAPITOL_ANTHEM = `${import.meta.env.BASE_URL}Horn%20of%20Plenty%20-%20Anth
 const nav = [
   ['Visão geral', 'overview', Flag], ['Personagens', 'characters', Users],
   ['Campanhas', 'campaigns', BookOpen], ['Sessões', 'games', Swords],
-  ['Arena', 'arena', Bird], ['Regras', 'rules', BookOpen], ['Configurações', 'settings', Settings]
+  ['Arena', 'arena', Bird], ['Mestre', 'master', ShieldCheck], ['Regras', 'rules', BookOpen], ['Configurações', 'settings', Settings]
 ];
 
 export default function App() {
@@ -266,6 +328,32 @@ export default function App() {
     '--district-deep': selectedDistrictTheme?.deep || '#30251d',
     ...(settings.backgroundImage ? { backgroundImage: 'linear-gradient(rgba(18,17,15,.91),rgba(18,17,15,.96)), url("' + settings.backgroundImage.replace(/"/g, '') + '")', backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' } : {})
   };
+  useEffect(() => {
+    const openCharacter = event => { setSelected(event.detail); setPage('characters'); };
+    window.addEventListener('hv-open-character', openCharacter);
+    return () => window.removeEventListener('hv-open-character', openCharacter);
+  }, []);
+  const uploadBackground = file => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { window.alert('Selecione um arquivo de imagem.'); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => {
+        const maxSide = 1800;
+        const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(image.width * scale);
+        canvas.height = Math.round(image.height * scale);
+        canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+        setSettings(s => ({ ...s, backgroundImage: canvas.toDataURL('image/jpeg', 0.8) }));
+      };
+      image.onerror = () => window.alert('Não foi possível abrir essa imagem.');
+      image.src = reader.result;
+    };
+    reader.onerror = () => window.alert('Não foi possível carregar o arquivo.');
+    reader.readAsDataURL(file);
+  };
   const uploadPortrait = file => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -369,6 +457,7 @@ export default function App() {
         <EditableItems title="Acontecimentos na arena" items={arena.events || []} onChange={events => setArena(a => ({...a,events}))}/>
         <label className="arena-field">Observações livres<textarea value={arena.notes || ''} onChange={e => setArena(a => ({...a,notes:e.target.value}))} placeholder="Anotações do mestre e informações descobertas..."/></label>
       </section>}
+      {page === 'master' && <MasterPanel characters={characters} setCharacters={setCharacters} campaigns={campaigns}/>}
       {page === 'rules' && <RulesPanel characters={characters} setCharacters={setCharacters}/>}
       {page === 'settings' && <section className="content">
         <div className="section-heading"><div><span className="eyebrow">PREFERÊNCIAS DO APLICATIVO</span><h3>Personalização</h3></div><Palette size={22}/></div>
@@ -380,7 +469,7 @@ export default function App() {
           </div>
           {selectedDistrictTheme && <div className="active-theme-note"><span className="active-theme-number">D{String(selectedDistrictNumber).padStart(2,'0')}</span><div><strong>{selectedDistrictTheme.name}</strong><p>{selectedDistrictTheme.note}</p></div><span className="active-theme-line"/></div>}
           <label className="arena-field">Cor de destaque personalizada<select value={settings.accent || 'theme'} onChange={e => setSettings(s => ({...s,accent:e.target.value}))}><option value="theme">Usar as cores próprias da identidade</option><option value="gold">Dourado</option><option value="red">Vermelho da Capital</option><option value="teal">Turquesa</option></select></label>
-          <label className="arena-field">Imagem adicional de fundo (opcional)<input value={settings.backgroundImage || ''} onChange={e => setSettings(s => ({...s,backgroundImage:e.target.value}))} placeholder="Cole um link de imagem para personalizar ainda mais"/></label>
+          <div className="background-picker"><div><span className="eyebrow">CENÁRIO PERSONALIZADO</span><strong>Imagem de fundo do aplicativo</strong><p>Escolha uma imagem salva no celular ou cole um endereço de imagem.</p></div><label className="primary file-import"><ImageIcon size={15}/> Escolher da galeria<input type="file" accept="image/*" onChange={e => {uploadBackground(e.target.files?.[0]);e.target.value='';}}/></label><label className="arena-field">Ou usar URL<input value={settings.backgroundImage?.startsWith('data:') ? '' : (settings.backgroundImage || '')} onChange={e => setSettings(s => ({...s,backgroundImage:e.target.value}))} placeholder="Cole um link de imagem"/></label>{settings.backgroundImage && <div className="background-preview"><img src={settings.backgroundImage} alt="Prévia do fundo escolhido"/><button type="button" className="text-button" onClick={() => setSettings(s => ({...s,backgroundImage:''}))}>Remover imagem de fundo</button></div>}</div>
           <button className="text-button" onClick={() => setSettings({theme:'capital',accent:'theme',backgroundImage:''})}>Restaurar identidade da Capital</button>
         </div>
         <div className="settings-card sound-settings"><h4>Hino de Panem • Abertura da Capital</h4><p>O hino toca ao abrir o aplicativo: volume normal nos primeiros 10 segundos e redução gradual nos 2 segundos seguintes, até silenciar. A reprodução não reinicia ao trocar de tela.</p><div className="sound-actions"><label className="sound-toggle"><input type="checkbox" checked={settings.soundEnabled !== false} onChange={e => { setSettings(s => ({...s,soundEnabled:e.target.checked})); if (e.target.checked) startOpeningAudio(); else if (openingAudio.current) { openingAudio.current.pause(); openingAudio.current.currentTime = 0; if (fadeTimer.current) window.clearTimeout(fadeTimer.current); if (fadeInterval.current) window.clearInterval(fadeInterval.current); } }}/> Tocar ao abrir o aplicativo</label><button type="button" className="text-button" onClick={startOpeningAudio}>▶ Testar abertura</button></div><small>Faixa de áudio armazenada localmente no aplicativo.</small></div>
