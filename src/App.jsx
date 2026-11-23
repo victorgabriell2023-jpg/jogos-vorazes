@@ -137,10 +137,18 @@ export default function App() {
     reader.onerror = () => setImportStatus('Falha ao ler o arquivo selecionado.');
     reader.readAsText(file);
   };
+  const selectedDistrictTheme = String(settings.theme || '').startsWith('district-')
+    ? districtThemes[Number(String(settings.theme).replace('district-', ''))]
+    : null;
+  const baseTheme = settings.theme === 'forest'
+    ? { bg: '#172019', panel: '#20291f', accent: '#91a66a' }
+    : settings.theme === 'ocean'
+      ? { bg: '#172027', panel: '#202a32', accent: '#65a9bd' }
+      : { bg: '#171716', panel: '#1d1c19', accent: '#b9975c' };
   const appearance = {
-    '--app-bg': settings.theme === 'forest' ? '#172019' : settings.theme === 'ocean' ? '#172027' : '#171716',
-    '--app-panel': settings.theme === 'forest' ? '#20291f' : settings.theme === 'ocean' ? '#202a32' : '#1d1c19',
-    '--app-accent': settings.accent === 'red' ? '#b5363e' : settings.accent === 'teal' ? '#55a9a0' : '#b9975c',
+    '--app-bg': selectedDistrictTheme?.deep || baseTheme.bg,
+    '--app-panel': selectedDistrictTheme ? `color-mix(in srgb, ${selectedDistrictTheme.deep} 78%, white)` : baseTheme.panel,
+    '--app-accent': settings.accent === 'red' ? '#b5363e' : settings.accent === 'teal' ? '#55a9a0' : selectedDistrictTheme?.accent || baseTheme.accent,
     ...(settings.backgroundImage ? { backgroundImage: 'linear-gradient(rgba(18,17,15,.91),rgba(18,17,15,.96)), url("' + settings.backgroundImage.replace(/"/g, '') + '")', backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' } : {})
   };
   const uploadPortrait = file => {
@@ -250,7 +258,7 @@ export default function App() {
       {page === 'settings' && <section className="content">
         <div className="section-heading"><div><span className="eyebrow">PREFERÊNCIAS DO APLICATIVO</span><h3>Personalização</h3></div><Palette size={22}/></div>
         <div className="settings-card"><h4>Aparência</h4>
-          <label className="arena-field">Tema de fundo<select value={settings.theme || 'capital'} onChange={e => setSettings(s => ({...s,theme:e.target.value}))}><option value="capital">Capital — carvão</option><option value="forest">Floresta — verde escuro</option><option value="ocean">Distrito 4 — azul profundo</option></select></label>
+          <label className="arena-field">Tema de fundo<select value={settings.theme || 'capital'} onChange={e => setSettings(s => ({...s,theme:e.target.value}))}><option value="capital">Capital — carvão e dourado</option>{Object.entries(districtThemes).map(([number, theme]) => <option key={number} value={`district-${number}`}>Distrito {number} — {theme.name}</option>)}</select></label>
           <label className="arena-field">Cor de destaque<select value={settings.accent || 'gold'} onChange={e => setSettings(s => ({...s,accent:e.target.value}))}><option value="gold">Dourado</option><option value="red">Vermelho</option><option value="teal">Turquesa</option></select></label>
           <label className="arena-field">Imagem de fundo por URL<input value={settings.backgroundImage || ''} onChange={e => setSettings(s => ({...s,backgroundImage:e.target.value}))} placeholder="Opcional: link de uma imagem"/></label>
           <button className="text-button" onClick={() => setSettings({theme:'capital',accent:'gold',backgroundImage:''})}>Restaurar aparência padrão</button>
