@@ -27,3 +27,14 @@
 .campaign-members input{accent-color:#9d2930}
 .campaign-members span{color:#918a7d}
 @media(max-width:560px){.track-row{grid-template-columns:minmax(0,1fr) 60px 60px auto;gap:5px}.portrait-image{max-width:240px}}
+
+
+.session-card{border:1px solid #39352e;background:#1d1c19;padding:18px;margin:14px 0}
+.session-heading{display:flex;align-items:center;gap:12px}
+.session-heading>input{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px solid #514839;color:#eee5d6;padding:10px 0;font:600 23px 'Cormorant Garamond';outline:none}
+.session-meta{display:grid;grid-template-columns:minmax(130px,.7fr) minmax(180px,1.3fr);gap:14px;margin-top:14px}
+.session-meta label,.session-summary{display:grid;gap:6px;color:#b9a783;font-size:10px;letter-spacing:1px}
+.session-meta input,.session-meta select{width:100%;min-width:0;background:#171614;border:1px solid #39352e;color:#eee5d6;padding:10px;font:12px 'DM Sans';outline:none}
+.session-summary{display:block;margin-top:16px}
+.session-summary textarea{display:block;width:100%;min-height:100px;resize:vertical;margin-top:6px;background:#171614;border:1px solid #39352e;color:#eee5d6;padding:11px;font:12px/1.6 'DM Sans';outline:none}
+@media(max-width:560px){.session-meta{grid-template-columns:1fr}}
