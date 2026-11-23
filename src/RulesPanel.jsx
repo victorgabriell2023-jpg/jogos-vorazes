@@ -13,7 +13,7 @@ export default function RulesPanel({characters,setCharacters}) {
   const stats=active?.stats||{}, skills=active?.skills||{}, social=active?.social||{}, survival=active?.survival||{};
   const derivedStats=useMemo(()=>derived(active||{}),[active]);
   const age=AGE_MODIFIERS[Number(active?.age)], district=DISTRICT_MODIFIERS[Number(active?.district)];
-  const setNumber=(group,key,value)=>update({[group]:{...(active[group]||{}),[key]:clamp(value,0,group==='stats'?3:99)}});
+  const setNumber=(group,key,value)=>update({[group]:{...(active[group]||{}),[key]:clamp(value,0,group==='stats'?3:group==='survival'?10:99)}});
   const allocate=(key,value)=>{const next={...skills,[key]:clamp(value,0,2)};const total=SKILLS.reduce((sum,k)=>sum+field(next,k),0);if(total<=8)setNumber('skills',key,value);};
   const training=active?.training||{};
   const trainingTotal=SKILLS.reduce((sum,k)=>sum+field(training,k),0);
