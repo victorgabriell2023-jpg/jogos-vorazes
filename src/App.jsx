@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import RulesPanel from './RulesPanel.jsx';
 import { BookOpen, Users, Flag, Swords, Settings, Plus, Search, Bird, ChevronRight, Trash2, Download, Upload, MapPin, Palette, History, Image as ImageIcon } from 'lucide-react';
 
 function CapitolEmblem({ size = 28 }) {
@@ -348,7 +349,7 @@ export default function App() {
         <EditableItems title="Acontecimentos na arena" items={arena.events || []} onChange={events => setArena(a => ({...a,events}))}/>
         <label className="arena-field">Observações livres<textarea value={arena.notes || ''} onChange={e => setArena(a => ({...a,notes:e.target.value}))} placeholder="Anotações do mestre e informações descobertas..."/></label>
       </section>}
-      {page === 'rules' && <section className="content"><div className="placeholder"><div className="seal"><BookOpen size={30}/></div><span className="eyebrow">SISTEMA DA MESA</span><h2>Livro de regras</h2><p>Área reservada para cadastrar atributos, testes, recursos e cálculos oficiais quando o livro de regras for enviado. Nenhuma mecânica foi presumida.</p></div></section>}
+      {page === 'rules' && <RulesPanel characters={characters} setCharacters={setCharacters}/ >}
       {page === 'settings' && <section className="content">
         <div className="section-heading"><div><span className="eyebrow">PREFERÊNCIAS DO APLICATIVO</span><h3>Personalização</h3></div><Palette size={22}/></div>
         <div className="settings-card theme-settings">
