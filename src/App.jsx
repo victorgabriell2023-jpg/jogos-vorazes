@@ -78,7 +78,7 @@ const districtThemes = {
   13: { name: 'Subsolo', accent: '#9b91b8', deep: '#302b43', note: 'Grafite, concreto frio e luz subterrânea.' }
 };
 function getDistrictTheme(value) {
-  const match = String(value || '').match(/\\d+/);
+  const match = String(value || '').match(/\d+/);
   const number = match ? Number(match[0]) : 0;
   return districtThemes[number] ? { number, ...districtThemes[number] } : null;
 }
