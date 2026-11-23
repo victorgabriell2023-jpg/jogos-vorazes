@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BookOpen, Users, Flag, Swords, Settings, Plus, Search, Bird, ChevronRight, Trash2 } from 'lucide-react';
+import { BookOpen, Users, Flag, Swords, Settings, Plus, Search, Bird, ChevronRight, Trash2, Download, Upload, MapPin, Palette, History, Image as ImageIcon } from 'lucide-react';
 
 function readSaved(key) {
   try {
@@ -94,14 +94,55 @@ export default function App() {
   const [characters, setCharacters] = useState(() => readSaved('hv-characters'));
   const [campaigns, setCampaigns] = useState(() => readSaved('hv-campaigns'));
   const [sessions, setSessions] = useState(() => readSaved('hv-sessions'));
+  const [arena, setArena] = useState(() => readSaved('hv-arena') || {});
+  const [settings, setSettings] = useState(() => readSaved('hv-settings') || { theme: 'capital', accent: 'gold', backgroundImage: '' });
+  const [importStatus, setImportStatus] = useState('');
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState('');
   useEffect(() => localStorage.setItem('hv-characters', JSON.stringify(characters)), [characters]);
   useEffect(() => localStorage.setItem('hv-campaigns', JSON.stringify(campaigns)), [campaigns]);
   useEffect(() => localStorage.setItem('hv-sessions', JSON.stringify(sessions)), [sessions]);
+  useEffect(() => localStorage.setItem('hv-arena', JSON.stringify(arena)), [arena]);
+  useEffect(() => localStorage.setItem('hv-settings', JSON.stringify(settings)), [settings]);
   const active = characters.find(c => c.id === selected);
   const filtered = useMemo(() => characters.filter(c => c.name.toLowerCase().includes(search.toLowerCase())), [characters, search]);
   const updateCharacter = patch => setCharacters(items => items.map(c => c.id === selected ? { ...c, ...patch } : c));
+  const addHistoryEntry = () => updateCharacter({ history: [...(active?.history || []), { id: Date.now(), date: new Date().toLocaleDateString('en-CA'), title: 'Novo acontecimento', description: '' }] });
+  const updateHistoryEntry = (id, patch) => updateCharacter({ history: (active?.history || []).map(entry => entry.id === id ? { ...entry, ...patch } : entry) });
+  const removeHistoryEntry = id => updateCharacter({ history: (active?.history || []).filter(entry => entry.id !== id) });
+  const exportBackup = () => {
+    const payload = { app: 'Jogos Vorazes RPG Companion', version: 1, exportedAt: new Date().toISOString(), characters, campaigns, sessions, arena, settings };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url; link.download = 'jogos-vorazes-backup.json'; link.click();
+    URL.revokeObjectURL(url);
+    setImportStatus('Backup exportado. Guarde o arquivo em um local seguro.');
+  };
+  const importBackup = file => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        if (!data || !Array.isArray(data.characters) || !Array.isArray(data.campaigns) || !Array.isArray(data.sessions)) throw new Error('invalid');
+        if (!window.confirm('Importar este backup substituirá os dados atuais deste navegador. Deseja continuar?')) return;
+        setCharacters(data.characters); setCampaigns(data.campaigns); setSessions(data.sessions);
+        setArena(data.arena && typeof data.arena === 'object' ? data.arena : {});
+        setSettings(data.settings && typeof data.settings === 'object' ? data.settings : { theme: 'capital', accent: 'gold', backgroundImage: '' });
+        setSelected(null); setPage('overview');
+        setImportStatus('Backup importado com sucesso.');
+      } catch { setImportStatus('Não foi possível importar. Confira se o arquivo é um backup válido do aplicativo.'); }
+    };
+    reader.onerror = () => setImportStatus('Falha ao ler o arquivo selecionado.');
+    reader.readAsText(file);
+  };
+  const appearance = {
+    '--app-bg': settings.theme === 'forest' ? '#172019' : settings.theme === 'ocean' ? '#172027' : '#171716',
+    '--app-panel': settings.theme === 'forest' ? '#20291f' : settings.theme === 'ocean' ? '#202a32' : '#1d1c19',
+    '--app-accent': settings.accent === 'red' ? '#b5363e' : settings.accent === 'teal' ? '#55a9a0' : '#b9975c',
+    ...(settings.backgroundImage ? { backgroundImage: 'linear-gradient(rgba(18,17,15,.91),rgba(18,17,15,.96)), url("' + settings.backgroundImage.replace(/"/g, '') + '")', backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' } : {})
+  };
   const uploadPortrait = file => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -137,7 +178,7 @@ export default function App() {
   const updateSession = (id, patch) => setSessions(items => items.map(session => session.id === id ? { ...session, ...patch } : session));
   const title = nav.find(n => n[1] === page)?.[0] || 'Visão geral';
 
-  return <div className="shell">
+  return <div className="shell" style={appearance}>
     <aside className="sidebar">
       <div className="brand"><div className="seal"><Bird size={25}/></div><div><span>ARQUIVOS DA CAPITAL</span><strong>JOGOS VORAZES</strong></div></div>
       <div className="season-label">COMPANION DE RPG</div>
@@ -161,6 +202,15 @@ export default function App() {
             <StatusTracks tracks={active.tracks || []} onChange={tracks => updateCharacter({tracks})}/>
             <EditableItems title="Inventário" items={active.inventory} onChange={inventory => updateCharacter({inventory})}/>
             <EditableItems title="Condições" items={active.conditions} onChange={conditions => updateCharacter({conditions})}/>
+            <div className="custom-section history-section">
+              <div className="custom-heading"><h4><History size={16}/> Histórico do tributo</h4><button type="button" className="text-button" onClick={addHistoryEntry}><Plus size={14}/> Registrar acontecimento</button></div>
+              {(active.history || []).length === 0 && <p className="muted">Ainda não há acontecimentos registrados para este personagem.</p>}
+              {(active.history || []).map(entry => <article className="history-entry" key={entry.id}>
+                <div className="history-entry-head"><input aria-label="Título do acontecimento" value={entry.title || ''} onChange={e => updateHistoryEntry(entry.id, {title:e.target.value})}/><button type="button" className="icon-button" onClick={() => removeHistoryEntry(entry.id)} aria-label="Excluir acontecimento"><Trash2 size={14}/></button></div>
+                <input className="history-date" type="date" value={entry.date || ''} onChange={e => updateHistoryEntry(entry.id, {date:e.target.value})}/>
+                <textarea value={entry.description || ''} onChange={e => updateHistoryEntry(entry.id, {description:e.target.value})} placeholder="O que aconteceu? Quem participou? Quais foram as consequências?"/>
+              </article>)}
+            </div>
             <button className="danger" onClick={() => {setCharacters(items => items.filter(c => c.id !== active.id));setSelected(null)}}><Trash2 size={15}/> Excluir personagem</button></div>
         </div></> : <><div className="section-heading"><div><span className="eyebrow">CADASTRO DE TRIBUTOS</span><h3>Personagens</h3></div><button className="primary" onClick={addCharacter}><Plus size={16}/> Novo personagem</button></div><div className="search"><Search size={16}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar personagem..."/></div><div className="character-grid">{filtered.map(c => <button className="character-card" key={c.id} style={getDistrictTheme(c.district) ? {'--district-accent':getDistrictTheme(c.district).accent,'--district-deep':getDistrictTheme(c.district).deep} : {}} onClick={() => setSelected(c.id)}><div className="avatar"><Users size={25}/></div><span>{c.district || 'DISTRITO NÃO DEFINIDO'}</span><strong>{c.name}</strong><small>EDITAR FICHA <ChevronRight size={13}/></small></button>)}</div></>}
       </section>}
@@ -185,7 +235,29 @@ export default function App() {
         </article>)}
         {!sessions.length && <div className="empty">Nenhuma sessão registrada. Crie a primeira para começar o diário da campanha.</div>}
       </section>}
-      {['arena','rules','settings'].includes(page) && <section className="content"><div className="placeholder"><div className="seal"><Bird size={30}/></div><span className="eyebrow">ÁREA EM PREPARAÇÃO</span><h2>{title}</h2><p>Esta seção será construída depois que recebermos o livro e confirmarmos as regras da campanha. Assim, o aplicativo acompanha o sistema real da mesa sem inventar mecânicas.</p></div></section>}
+      {page === 'arena' && <section className="content">
+        <div className="section-heading"><div><span className="eyebrow">REGISTRO DO CAMPO DE JOGO</span><h3>Arena</h3></div><span className="arena-tag"><MapPin size={14}/> Painel narrativo</span></div>
+        <p className="note">Organize o cenário e os acontecimentos da arena. Este painel não presume regras, distâncias, dano ou mecânicas: tudo permanece editável até recebermos o livro.</p>
+        <label className="arena-field">Nome ou identificação da arena<input value={arena.name || ''} onChange={e => setArena(a => ({...a,name:e.target.value}))} placeholder="Ex.: Arena da campanha atual"/></label>
+        <label className="arena-field">Descrição geral<textarea value={arena.description || ''} onChange={e => setArena(a => ({...a,description:e.target.value}))} placeholder="Descreva o ambiente, clima, aparência e características conhecidas..."/></label>
+        <label className="arena-field">Imagem ou mapa por URL<input value={arena.mapImage || ''} onChange={e => setArena(a => ({...a,mapImage:e.target.value}))} placeholder="Cole o link de uma imagem ou mapa"/></label>
+        {arena.mapImage && <img className="arena-map" src={arena.mapImage} alt="Mapa ou imagem da arena" onError={e => {e.currentTarget.style.display='none'}}/>}
+        <div className="arena-columns"><EditableItems title="Regiões e locais" items={arena.locations || []} onChange={locations => setArena(a => ({...a,locations}))}/><EditableItems title="Perigos e elementos conhecidos" items={arena.dangers || []} onChange={dangers => setArena(a => ({...a,dangers}))}/></div>
+        <EditableItems title="Acontecimentos na arena" items={arena.events || []} onChange={events => setArena(a => ({...a,events}))}/>
+        <label className="arena-field">Observações livres<textarea value={arena.notes || ''} onChange={e => setArena(a => ({...a,notes:e.target.value}))} placeholder="Anotações do mestre e informações descobertas..."/></label>
+      </section>}
+      {page === 'rules' && <section className="content"><div className="placeholder"><div className="seal"><BookOpen size={30}/></div><span className="eyebrow">SISTEMA DA MESA</span><h2>Livro de regras</h2><p>Área reservada para cadastrar atributos, testes, recursos e cálculos oficiais quando o livro de regras for enviado. Nenhuma mecânica foi presumida.</p></div></section>}
+      {page === 'settings' && <section className="content">
+        <div className="section-heading"><div><span className="eyebrow">PREFERÊNCIAS DO APLICATIVO</span><h3>Personalização</h3></div><Palette size={22}/></div>
+        <div className="settings-card"><h4>Aparência</h4>
+          <label className="arena-field">Tema de fundo<select value={settings.theme || 'capital'} onChange={e => setSettings(s => ({...s,theme:e.target.value}))}><option value="capital">Capital — carvão</option><option value="forest">Floresta — verde escuro</option><option value="ocean">Distrito 4 — azul profundo</option></select></label>
+          <label className="arena-field">Cor de destaque<select value={settings.accent || 'gold'} onChange={e => setSettings(s => ({...s,accent:e.target.value}))}><option value="gold">Dourado</option><option value="red">Vermelho</option><option value="teal">Turquesa</option></select></label>
+          <label className="arena-field">Imagem de fundo por URL<input value={settings.backgroundImage || ''} onChange={e => setSettings(s => ({...s,backgroundImage:e.target.value}))} placeholder="Opcional: link de uma imagem"/></label>
+          <button className="text-button" onClick={() => setSettings({theme:'capital',accent:'gold',backgroundImage:''})}>Restaurar aparência padrão</button>
+        </div>
+        <div className="settings-card"><h4><Download size={17}/> Backup e transferência</h4><p>Exporte personagens, campanhas, sessões, Arena e preferências em um arquivo JSON. Para recuperar ou transferir, importe esse arquivo em outro navegador.</p><div className="backup-actions"><button className="primary" onClick={exportBackup}><Download size={15}/> Exportar backup</button><label className="primary file-import"><Upload size={15}/> Importar backup<input type="file" accept="application/json,.json" onChange={e => {importBackup(e.target.files?.[0]);e.target.value='';}}/></label></div>{importStatus && <p className="backup-status">{importStatus}</p>}</div>
+        <div className="settings-card"><h4>Sobre o salvamento</h4><p>Os dados são guardados neste navegador e neste dispositivo. O backup permite transportar os registros manualmente, mas ainda não existe sincronização automática na nuvem.</p></div>
+      </section>}
       <footer>O QUE FAZEMOS NESTA ARENA ECOA POR PANEM. <span>JOGOS VORAZES RPG</span></footer>
     </main>
   </div>;
