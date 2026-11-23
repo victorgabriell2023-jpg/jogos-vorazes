@@ -356,7 +356,7 @@ export default function App() {
   const updateHistoryEntry = (id, patch) => updateCharacter({ history: (active?.history || []).map(entry => entry.id === id ? { ...entry, ...patch } : entry) });
   const removeHistoryEntry = id => updateCharacter({ history: (active?.history || []).filter(entry => entry.id !== id) });
   const exportBackup = () => {
-    const payload = { app: 'Jogos Vorazes RPG Companion', version: 1, exportedAt: new Date().toISOString(), characters, campaigns, sessions, arena, settings };
+    const payload = { app: 'Jogos Vorazes RPG Companion', version: 1, exportedAt: new Date().toISOString(), characters, campaigns, sessions, arena, settings, districtImages };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -374,7 +374,8 @@ export default function App() {
         if (!window.confirm('Importar este backup substituirá os dados atuais deste navegador. Deseja continuar?')) return;
         setCharacters(data.characters); setCampaigns(data.campaigns); setSessions(data.sessions);
         setArena(data.arena && typeof data.arena === 'object' ? data.arena : {});
-        setSettings(data.settings && typeof data.settings === 'object' ? data.settings : { theme: 'capital', accent: 'gold', backgroundImage: '' });
+        setSettings(data.settings && typeof data.settings === 'object' ? data.settings : { theme: 'capital', accent: 'theme', backgroundImage: '' });
+        setDistrictImages(data.districtImages && typeof data.districtImages === 'object' ? data.districtImages : {});
         setSelected(null); setPage('overview');
         setImportStatus('Backup importado com sucesso.');
       } catch { setImportStatus('Não foi possível importar. Confira se o arquivo é um backup válido do aplicativo.'); }
@@ -389,7 +390,7 @@ export default function App() {
   const appearance = {
     '--app-bg': selectedDistrictTheme?.deep || baseTheme.bg,
     '--app-panel': selectedDistrictTheme ? `color-mix(in srgb, ${selectedDistrictTheme.deep} 72%, #171614)` : baseTheme.panel,
-    '--app-accent': settings.accent === 'red' ? '#b5363e' : settings.accent === 'teal' ? '#55a9a0' : selectedDistrictTheme?.accent || baseTheme.accent,
+    '--app-accent': settings.accent === 'red' ? '#b5363e' : settings.accent === 'teal' ? '#55a9a0' : settings.accent === 'gold' ? '#b9975c' : selectedDistrictTheme?.accent || baseTheme.accent,
     '--district-accent': selectedDistrictTheme?.accent || '#c6a36a',
     '--district-deep': selectedDistrictTheme?.deep || '#30251d',
     ...(settings.backgroundImage ? { backgroundImage: 'linear-gradient(rgba(18,17,15,.91),rgba(18,17,15,.96)), url("' + settings.backgroundImage.replace(/"/g, '') + '")', backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' } : {})
@@ -488,7 +489,7 @@ export default function App() {
               </article>)}
             </div>
             <button className="danger" onClick={() => { if (window.confirm('Excluir este tributo? Essa ação não pode ser desfeita.')) { setCharacters(items => items.filter(c => c.id !== active.id)); setCampaigns(items => items.map(campaign => ({ ...campaign, characterIds: (campaign.characterIds || []).filter(id => id !== active.id) }))); setSelected(null); } }}><Trash2 size={15}/> Excluir personagem</button></div>
-        </div></> : <><div className="section-heading"><div><span className="eyebrow">CADASTRO DE TRIBUTOS</span><h3>Personagens</h3></div><button className="primary" onClick={addCharacter}><Plus size={16}/> Novo personagem</button></div><div className="search"><Search size={16}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar personagem..."/></div><div className="character-grid">{filtered.map(c => <button className="character-card" key={c.id} style={getDistrictTheme(c.district) ? {'--district-accent':getDistrictTheme(c.district).accent,'--district-deep':getDistrictTheme(c.district).deep} : {}} onClick={() => setSelected(c.id)}><>{c.image ? <img className="character-thumb" src={c.image} alt="" /> : <div className="avatar"><Users size={25}/></div>}</><span>{c.district || 'DISTRITO NÃO DEFINIDO'}</span><strong>{c.name}</strong><small>EDITAR FICHA <ChevronRight size={13}/></small></button>)}</div></>}
+        </div></> : <><div className="section-heading"><div><span className="eyebrow">CADASTRO DE TRIBUTOS</span><h3>Personagens</h3></div><button className="primary" onClick={addCharacter}><Plus size={16}/> Novo personagem</button></div><div className="search"><Search size={16}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar personagem..."/></div><div className="character-grid">{filtered.map(c => <button className="character-card" key={c.id} style={getDistrictTheme(c.district) ? {'--district-accent':getDistrictTheme(c.district).accent,'--district-deep':getDistrictTheme(c.district).deep} : {}} onClick={() => setSelected(c.id)}><>{c.image ? <img className="character-thumb" src={c.image} alt="" /> : <div className="avatar"><Users size={25}/></div>}</><span>{c.district || 'DISTRITO NÃO DEFINIDO'}</span><strong>{c.name}</strong><small>EDITAR FICHA <ChevronRight size={13}/></small></button>)}</div>{filtered.length === 0 && <div className="empty">Nenhum personagem encontrado com esse nome.</div>}</>}
       </section>}
       {page === 'campaigns' && <section className="content"><div className="section-heading"><div><span className="eyebrow">HISTÓRIAS DE PANEM</span><h3>Campanhas</h3></div><button className="primary" onClick={addCampaign}><Plus size={16}/> Nova campanha</button></div>
         {campaigns.map(c => <article className="campaign-card" key={c.id}>
