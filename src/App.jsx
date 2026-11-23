@@ -102,6 +102,31 @@ export default function App() {
   const active = characters.find(c => c.id === selected);
   const filtered = useMemo(() => characters.filter(c => c.name.toLowerCase().includes(search.toLowerCase())), [characters, search]);
   const updateCharacter = patch => setCharacters(items => items.map(c => c.id === selected ? { ...c, ...patch } : c));
+  const uploadPortrait = file => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      window.alert('Selecione um arquivo de imagem.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const image = new Image();
+      image.onload = () => {
+        const maxSide = 1000;
+        const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(image.width * scale);
+        canvas.height = Math.round(image.height * scale);
+        const context = canvas.getContext('2d');
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        updateCharacter({ image: canvas.toDataURL('image/jpeg', 0.82) });
+      };
+      image.onerror = () => window.alert('Não foi possível abrir essa imagem.');
+      image.src = reader.result;
+    };
+    reader.onerror = () => window.alert('Não foi possível carregar o arquivo.');
+    reader.readAsDataURL(file);
+  };
   const addCharacter = () => {
     const c = { id: Date.now(), name: 'Novo tributo', district: '', age: '', story: '', image: '', stats: {}, skills: {}, inventory: [], conditions: [], tracks: [] };
     setCharacters(items => [...items, c]); setSelected(c.id); setPage('characters');
@@ -129,7 +154,7 @@ export default function App() {
       </section>}
       {page === 'characters' && <section className="content">
         {active ? <><button className="back" onClick={() => setSelected(null)}>← Todos os personagens</button>{(() => { const theme = getDistrictTheme(active.district); return <div className="district-profile" style={theme ? {'--district-accent':theme.accent,'--district-deep':theme.deep} : {}}><div className="district-profile-top"><span className="eyebrow">IDENTIDADE DO DISTRITO {theme ? theme.number : ''}</span><strong>{theme ? theme.name : 'Distrito não definido'}</strong></div><p>{theme ? theme.note : 'Informe o número do distrito para aplicar sua identidade visual.'}</p></div>; })()}<div className="editor">
-          <div className="portrait"><>{active.image ? <img className="portrait-image" src={active.image} alt="Retrato do personagem" onError={e => { e.currentTarget.style.display = 'none'; }}/> : <div className="avatar large"><Users size={38}/></div>}</><label className="upload">URL do retrato<input value={active.image || ''} onChange={e => updateCharacter({image:e.target.value})} placeholder="Cole um link de imagem"/></label></div>
+          <div className="portrait"><>{active.image ? <img className="portrait-image" src={active.image} alt="Retrato do personagem" onError={e => { e.currentTarget.style.display = 'none'; }}/> : <div className="avatar large"><Users size={38}/></div>}</><label className="photo-picker"><span><Plus size={15}/> Escolher foto da galeria</span><input type="file" accept="image/*" onChange={e => { uploadPortrait(e.target.files?.[0]); e.target.value = ''; }}/></label><label className="upload">Ou usar URL do retrato<input value={active.image || ''} onChange={e => updateCharacter({image:e.target.value})} placeholder="Cole um link de imagem"/></label>{active.image && <button type="button" className="text-button remove-photo" onClick={() => updateCharacter({image:''})}>Remover retrato</button>}</div>
           <div className="fields"><label>Nome<input value={active.name} onChange={e => updateCharacter({name:e.target.value})}/></label><div className="two"><label>Distrito<input value={active.district} onChange={e => updateCharacter({district:e.target.value})} placeholder="Ex.: 3"/></label><label>Idade<input value={active.age} onChange={e => updateCharacter({age:e.target.value})} placeholder="Idade"/></label></div><label>História<textarea value={active.story} onChange={e => updateCharacter({story:e.target.value})} placeholder="Conte a história do personagem..."/></label><p className="note">Campos livres para organizar a ficha. Os nomes e valores são editáveis; as regras e cálculos oficiais serão adicionados depois de recebermos o livro.</p>
             <EditableValues title="Atributos" values={active.stats} onChange={stats => updateCharacter({stats})}/>
             <EditableValues title="Perícias" values={active.skills} onChange={skills => updateCharacter({skills})}/>
