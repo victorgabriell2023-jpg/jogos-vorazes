@@ -94,6 +94,57 @@ function getDistrictTheme(value) {
   return districtThemes[number] ? { number, ...districtThemes[number] } : null;
 }
 
+const districtVisuals = {
+  1: { query: 'luxury jewelry gold gemstones', label: 'Luxo e joalheria' },
+  2: { query: 'marble quarry stone architecture', label: 'Pedreiras e mármore' },
+  3: { query: 'electronics circuit board technology', label: 'Tecnologia e circuitos' },
+  4: { query: 'fishing harbor coastal boats ocean', label: 'Pesca e litoral' },
+  5: { query: 'hydroelectric dam power station', label: 'Energia e barragens' },
+  6: { query: 'railway train transport station', label: 'Transporte e ferrovias' },
+  7: { query: 'deep green forest timber lumber', label: 'Florestas e madeira' },
+  8: { query: 'textile factory weaving fabric', label: 'Tecidos e tecelagem' },
+  9: { query: 'golden wheat grain field harvest', label: 'Grãos e colheita' },
+  10: { query: 'cattle ranch grazing pasture', label: 'Pecuária e campos' },
+  11: { query: 'agriculture plantation orchard fields', label: 'Agricultura e plantações' },
+  12: { query: 'coal mine industrial mining landscape', label: 'Mineração de carvão' },
+  13: { query: 'underground bunker concrete architecture', label: 'Subsolo e concreto' }
+};
+
+function playCapitolSignal() {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    const context = new AudioContextClass();
+    const master = context.createGain();
+    master.gain.setValueAtTime(0.0001, context.currentTime);
+    master.gain.exponentialRampToValueAtTime(0.12, context.currentTime + 0.18);
+    master.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 2.5);
+    master.connect(context.destination);
+    const notes = [
+      { frequency: 392, at: 0.05, duration: 1.5 },
+      { frequency: 523.25, at: 0.42, duration: 1.55 },
+      { frequency: 659.25, at: 0.82, duration: 1.45 },
+      { frequency: 783.99, at: 1.18, duration: 1.25 }
+    ];
+    notes.forEach(note => {
+      const oscillator = context.createOscillator();
+      const envelope = context.createGain();
+      oscillator.type = 'sine';
+      oscillator.frequency.value = note.frequency;
+      envelope.gain.setValueAtTime(0.0001, context.currentTime + note.at);
+      envelope.gain.exponentialRampToValueAtTime(0.22, context.currentTime + note.at + 0.06);
+      envelope.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + note.at + note.duration);
+      oscillator.connect(envelope);
+      envelope.connect(master);
+      oscillator.start(context.currentTime + note.at);
+      oscillator.stop(context.currentTime + note.at + note.duration + 0.05);
+    });
+    window.setTimeout(() => context.close().catch(() => {}), 3000);
+  } catch {
+    // Alguns navegadores só permitem áudio depois de uma interação do usuário.
+  }
+}
+
 const nav = [
   ['Visão geral', 'overview', Flag], ['Personagens', 'characters', Users],
   ['Campanhas', 'campaigns', BookOpen], ['Sessões', 'games', Swords],
@@ -107,6 +158,10 @@ export default function App() {
   const [sessions, setSessions] = useState(() => readSaved('hv-sessions'));
   const [arena, setArena] = useState(() => readSaved('hv-arena') || {});
   const [settings, setSettings] = useState(() => readSaved('hv-settings') || { theme: 'capital', accent: 'gold', backgroundImage: '' });
+  const [districtImages, setDistrictImages] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('hv-district-images') || '{}'); }
+    catch { return {}; }
+  });
   const [importStatus, setImportStatus] = useState('');
   const [selected, setSelected] = useState(null);
   const [search, setSearch] = useState('');
@@ -115,7 +170,34 @@ export default function App() {
   useEffect(() => localStorage.setItem('hv-sessions', JSON.stringify(sessions)), [sessions]);
   useEffect(() => localStorage.setItem('hv-arena', JSON.stringify(arena)), [arena]);
   useEffect(() => localStorage.setItem('hv-settings', JSON.stringify(settings)), [settings]);
+  useEffect(() => localStorage.setItem('hv-district-images', JSON.stringify(districtImages)), [districtImages]);
+  useEffect(() => {
+    let cancelled = false;
+    const loadDistrictImages = async () => {
+      const missing = Object.entries(districtVisuals).filter(([number]) => !districtImages[number]);
+      const found = await Promise.all(missing.map(async ([number, visual]) => {
+        try {
+          const response = await fetch('https://quarry.siteko.tech/api/v1/images?q=' + encodeURIComponent(visual.query) + '&per_page=1');
+          if (!response.ok) return null;
+          const data = await response.json();
+          const image = data.images?.[0];
+          const url = image?.urls?.['1200'] || image?.urls?.['800'] || image?.urls?.['400'];
+          return url ? [number, { url, title: image.title || visual.label, author: image.author || '', license: image.licence || 'cc0' }] : null;
+        } catch { return null; }
+      }));
+      if (!cancelled) setDistrictImages(current => ({ ...current, ...Object.fromEntries(found.filter(Boolean)) }));
+    };
+    loadDistrictImages();
+    return () => { cancelled = true; };
+  }, []);
+  useEffect(() => {
+    if (settings.soundEnabled === false) return;
+    const timer = window.setTimeout(playCapitolSignal, 450);
+    return () => window.clearTimeout(timer);
+  }, []);
   const active = characters.find(c => c.id === selected);
+  const activeDistrictTheme = getDistrictTheme(active?.district);
+  const activeDistrictImage = activeDistrictTheme ? districtImages[activeDistrictTheme.number]?.url : '';
   const filtered = useMemo(() => characters.filter(c => c.name.toLowerCase().includes(search.toLowerCase())), [characters, search]);
   const updateCharacter = patch => setCharacters(items => items.map(c => c.id === selected ? { ...c, ...patch } : c));
   const addHistoryEntry = () => updateCharacter({ history: [...(active?.history || []), { id: Date.now(), date: new Date().toLocaleDateString('en-CA'), title: 'Novo acontecimento', description: '' }] });
@@ -211,7 +293,7 @@ export default function App() {
         {characters.length ? <div className="character-grid">{characters.slice(0,3).map(c => <button className="character-card" key={c.id} style={getDistrictTheme(c.district) ? {'--district-accent':getDistrictTheme(c.district).accent,'--district-deep':getDistrictTheme(c.district).deep} : {}} onClick={() => {setSelected(c.id);setPage('characters')}}><>{c.image ? <img className="character-thumb" src={c.image} alt="" /> : <div className="avatar"><Users size={25}/></div>}</><span>{c.district || 'DISTRITO NÃO DEFINIDO'}</span><strong>{c.name}</strong><small>ABRIR FICHA <ChevronRight size={13}/></small></button>)}</div> : <div className="empty">Nenhum tributo registrado. Crie o primeiro personagem para começar.</div>}
       </section>}
       {page === 'characters' && <section className="content">
-        {active ? <><button className="back" onClick={() => setSelected(null)}>← Todos os personagens</button>{(() => { const theme = getDistrictTheme(active.district); return <div className="district-profile" style={theme ? {'--district-accent':theme.accent,'--district-deep':theme.deep} : {}}><div className="district-profile-top"><span className="eyebrow">IDENTIDADE DO DISTRITO {theme ? theme.number : ''}</span><strong>{theme ? theme.name : 'Distrito não definido'}</strong></div><p>{theme ? theme.note : 'Informe o número do distrito para aplicar sua identidade visual.'}</p></div>; })()}<div className="profile-overview"><div><span>DISTRITO</span><strong>{active.district || "—"}</strong></div><div><span>IDADE</span><strong>{active.age || "—"}</strong></div><div><span>ATRIBUTOS</span><strong>{Object.keys(active.stats || {}).length}</strong></div><div><span>REGISTROS</span><strong>{(active.history || []).length}</strong></div></div><div className="editor">
+        {active ? <><button className="back" onClick={() => setSelected(null)}>← Todos os personagens</button><div className="tribute-identity" style={activeDistrictTheme ? {'--district-accent':activeDistrictTheme.accent,'--district-deep':activeDistrictTheme.deep} : {}}><div className="tribute-identity-portrait">{active.image ? <img src={active.image} alt={'Retrato de ' + active.name}/> : <div className="avatar large"><Users size={38}/></div>}</div><div className="tribute-identity-info"><span className="eyebrow">DOSSIÊ OFICIAL • TRIBUTO</span><h2>{active.name || 'Tributo sem nome'}</h2><div className="tribute-tags"><span>DISTRITO {active.district || '—'}</span><span>{active.age ? active.age + ' ANOS' : 'IDADE NÃO INFORMADA'}</span><span>{(active.conditions || []).length ? (active.conditions || []).length + ' CONDIÇÃO(ÕES)' : 'STATUS NÃO REGISTRADO'}</span></div><p>REGISTRO INDIVIDUAL • PANEM / ARQUIVO CENTRAL</p></div><span className="tribute-seal"><CapitolEmblem size={58}/></span></div>{(() => { const theme = getDistrictTheme(active.district); return <div className="district-profile" style={{...(theme ? {'--district-accent':theme.accent,'--district-deep':theme.deep} : {}), ...(activeDistrictImage ? {backgroundImage:'linear-gradient(90deg,rgba(13,12,11,.93),rgba(13,12,11,.65)),url("'+activeDistrictImage+'")'} : {})}}><div className="district-profile-top"><span className="eyebrow">IDENTIDADE DO DISTRITO {theme ? theme.number : ''}</span><strong>{theme ? theme.name : 'Distrito não definido'}</strong></div><p>{theme ? theme.note : 'Informe o número do distrito para aplicar sua identidade visual.'}</p></div>; })()}<div className="profile-overview"><div><span>DISTRITO</span><strong>{active.district || "—"}</strong></div><div><span>IDADE</span><strong>{active.age || "—"}</strong></div><div><span>ATRIBUTOS</span><strong>{Object.keys(active.stats || {}).length}</strong></div><div><span>REGISTROS</span><strong>{(active.history || []).length}</strong></div></div><div className="editor">
           <div className="portrait"><>{active.image ? <img className="portrait-image" src={active.image} alt="Retrato do personagem" onError={e => { e.currentTarget.style.display = 'none'; }}/> : <div className="avatar large"><Users size={38}/></div>}</><label className="photo-picker"><span><Plus size={15}/> Escolher foto da galeria</span><input type="file" accept="image/*" onChange={e => { uploadPortrait(e.target.files?.[0]); e.target.value = ''; }}/></label><label className="upload">Ou usar URL do retrato<input value={active.image || ''} onChange={e => updateCharacter({image:e.target.value})} placeholder="Cole um link de imagem"/></label>{active.image && <button type="button" className="text-button remove-photo" onClick={() => updateCharacter({image:''})}>Remover retrato</button>}</div>
           <div className="fields"><label>Nome<input value={active.name} onChange={e => updateCharacter({name:e.target.value})}/></label><div className="two"><label>Distrito<input value={active.district} onChange={e => updateCharacter({district:e.target.value})} placeholder="Ex.: 3"/></label><label>Idade<input value={active.age} onChange={e => updateCharacter({age:e.target.value})} placeholder="Idade"/></label></div><label>História<textarea value={active.story} onChange={e => updateCharacter({story:e.target.value})} placeholder="Conte a história do personagem..."/></label><p className="note">Campos livres para organizar a ficha. Os nomes e valores são editáveis; as regras e cálculos oficiais serão adicionados depois de recebermos o livro.</p>
             <EditableValues title="Atributos" values={active.stats} onChange={stats => updateCharacter({stats})}/>
@@ -270,13 +352,14 @@ export default function App() {
           <div className="theme-intro"><span className="eyebrow">IDENTIDADE VISUAL DE PANEM</span><h4>Escolha de qual distrito é o seu aplicativo</h4><p>Não é só uma troca de papel de parede. Cada identidade muda a paleta completa da interface: fundo, painéis, bordas, detalhes, cor dos destaques e atmosfera visual. A Capital tem sua própria identidade.</p></div>
           <div className="theme-preview-grid">
             <button type="button" className={(!selectedDistrictTheme ? 'theme-choice selected' : 'theme-choice')} style={{'--theme-accent':'#c6a36a','--theme-deep':'#30251d'}} onClick={() => setSettings(s => ({...s,theme:'capital'}))}><span className="theme-swatch"><i/><i/><i/></span><strong>A CAPITAL</strong><small>Carvão, aço e dourado</small><em>{!selectedDistrictTheme ? 'IDENTIDADE ATIVA' : 'Selecionar identidade'}</em></button>
-            {Object.entries(districtThemes).map(([number, theme]) => <button type="button" key={number} className={selectedDistrictNumber === Number(number) ? 'theme-choice selected' : 'theme-choice'} style={{'--theme-accent':theme.accent,'--theme-deep':theme.deep}} onClick={() => setSettings(s => ({...s,theme:`district-${number}`,accent:'theme'}))}><span className="theme-swatch"><i/><i/><i/></span><strong>DISTRITO {number.padStart(2,'0')}</strong><small>{theme.name}</small><em>{selectedDistrictNumber === Number(number) ? 'IDENTIDADE ATIVA' : 'Selecionar identidade'}</em></button>)}
+            {Object.entries(districtThemes).map(([number, theme]) => <button type="button" key={number} className={selectedDistrictNumber === Number(number) ? 'theme-choice selected' : 'theme-choice'} style={{'--theme-accent':theme.accent,'--theme-deep':theme.deep}} onClick={() => setSettings(s => ({...s,theme:`district-${number}`,accent:'theme'}))}>{districtImages[number]?.url && <img className="theme-image" src={districtImages[number].url} alt="" loading="lazy"/>}<span className="theme-swatch"><i/><i/><i/></span><strong>DISTRITO {number.padStart(2,'0')}</strong><small>{theme.name}</small><em>{selectedDistrictNumber === Number(number) ? 'IDENTIDADE ATIVA' : 'Selecionar identidade'}</em></button>)}
           </div>
           {selectedDistrictTheme && <div className="active-theme-note"><span className="active-theme-number">D{String(selectedDistrictNumber).padStart(2,'0')}</span><div><strong>{selectedDistrictTheme.name}</strong><p>{selectedDistrictTheme.note}</p></div><span className="active-theme-line"/></div>}
           <label className="arena-field">Cor de destaque personalizada<select value={settings.accent || 'theme'} onChange={e => setSettings(s => ({...s,accent:e.target.value}))}><option value="theme">Usar as cores próprias da identidade</option><option value="gold">Dourado</option><option value="red">Vermelho da Capital</option><option value="teal">Turquesa</option></select></label>
           <label className="arena-field">Imagem adicional de fundo (opcional)<input value={settings.backgroundImage || ''} onChange={e => setSettings(s => ({...s,backgroundImage:e.target.value}))} placeholder="Cole um link de imagem para personalizar ainda mais"/></label>
           <button className="text-button" onClick={() => setSettings({theme:'capital',accent:'theme',backgroundImage:''})}>Restaurar identidade da Capital</button>
         </div>
+        <div className="settings-card sound-settings"><h4>Som de abertura da Capital</h4><p>Uma assinatura sonora original, criada para este aplicativo, com clima cerimonial e futurista. O navegador pode exigir uma interação para liberar o áudio na primeira vez.</p><div className="sound-actions"><label className="sound-toggle"><input type="checkbox" checked={settings.soundEnabled !== false} onChange={e => { setSettings(s => ({...s,soundEnabled:e.target.checked})); if (e.target.checked) playCapitolSignal(); }}/> Tocar ao abrir o aplicativo</label><button type="button" className="text-button" onClick={playCapitolSignal}>▶ Testar som</button></div><small>O áudio não é a trilha original do filme; é um efeito próprio para evitar usar material protegido sem autorização.</small></div>
         <div className="settings-card"><h4><Download size={17}/> Backup e transferência</h4><p>Exporte personagens, campanhas, sessões, Arena e preferências em um arquivo JSON. Para recuperar ou transferir, importe esse arquivo em outro navegador.</p><div className="backup-actions"><button className="primary" onClick={exportBackup}><Download size={15}/> Exportar backup</button><label className="primary file-import"><Upload size={15}/> Importar backup<input type="file" accept="application/json,.json" onChange={e => {importBackup(e.target.files?.[0]);e.target.value='';}}/></label></div>{importStatus && <p className="backup-status">{importStatus}</p>}</div>
         <div className="settings-card"><h4>Sobre o salvamento</h4><p>Os dados são guardados neste navegador e neste dispositivo. O backup permite transportar os registros manualmente, mas ainda não existe sincronização automática na nuvem.</p></div>
       </section>}
