@@ -269,3 +269,14 @@ button:active{transform:translateY(0) scale(.99)}
  footer{font-size:6px;letter-spacing:.8px;gap:10px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+
+@media(max-width:800px) and (min-width:561px){
+ .brand{justify-content:flex-start}
+ .brand>div:last-child{display:block}
+ .season-label{display:block}
+ .sidebar-bottom{display:block}
+ .nav-item:not(.active){display:flex;font-size:11px}
+ .nav-item{justify-content:flex-start}
+ .nav-item svg:last-child{display:block}
+}
