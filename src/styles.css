@@ -353,3 +353,45 @@ button:active{transform:translateY(0) scale(.99)}
 .active-theme-line{height:2px;flex:1;background:linear-gradient(90deg,var(--district-accent,#b9975c),transparent)}
 @media(max-width:700px){.theme-preview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.topbar:after{display:none}}
 @media(max-width:420px){.theme-preview-grid{grid-template-columns:1fr}.theme-choice{min-height:108px}.active-theme-note{align-items:flex-start}.active-theme-line{display:none}}
+
+
+/* ── Dossiê do tributo: retrato em destaque e identidade de Panem ── */
+.tribute-identity{
+  position:relative;display:grid;grid-template-columns:150px minmax(0,1fr) 64px;align-items:center;gap:24px;
+  margin:16px 0 18px;padding:22px;border:1px solid color-mix(in srgb,var(--district-accent,#b9975c) 48%,#34302a);
+  background:linear-gradient(115deg,color-mix(in srgb,var(--district-deep,#30251d) 78%,#090909),rgba(20,18,16,.96));
+  box-shadow:0 16px 36px rgba(0,0,0,.2);overflow:hidden
+}
+.tribute-identity:after{content:'PANEM • REGISTRO DE IDENTIDADE';position:absolute;right:18px;top:12px;font-size:7px;letter-spacing:2px;color:rgba(230,216,190,.34)}
+.tribute-identity-portrait{height:168px;width:150px;border:1px solid var(--district-accent,#b9975c);background:rgba(0,0,0,.25);overflow:hidden}
+.tribute-identity-portrait img{display:block;width:100%;height:100%;object-fit:cover}
+.tribute-identity-portrait .avatar.large{height:100%;width:100%;margin:0;border:0}
+.tribute-identity-info .eyebrow{color:var(--district-accent,#c6a36a);font-size:8px;letter-spacing:2px}
+.tribute-identity-info h2{font:700 clamp(30px,4vw,46px) 'Cormorant Garamond',serif;letter-spacing:.6px;color:#f4ead9;margin:9px 0 12px;overflow-wrap:anywhere}
+.tribute-tags{display:flex;flex-wrap:wrap;gap:7px}
+.tribute-tags span{padding:7px 9px;border:1px solid color-mix(in srgb,var(--district-accent,#b9975c) 42%,transparent);background:rgba(0,0,0,.23);font-size:8px;letter-spacing:1.1px;color:#e6d7bd}
+.tribute-identity-info p{margin:13px 0 0;font-size:7px;letter-spacing:2px;color:#958a78}
+.tribute-seal{color:var(--district-accent,#c6a36a);opacity:.8;display:grid;place-items:center}
+.district-profile{background-position:center;background-size:cover;background-repeat:no-repeat}
+.theme-choice{isolation:isolate}
+.theme-choice .theme-image{position:absolute;z-index:-1;inset:0;width:100%;height:100%;object-fit:cover;opacity:.38;filter:saturate(.78) contrast(1.08);transition:transform .4s,opacity .3s}
+.theme-choice:hover .theme-image{transform:scale(1.06);opacity:.55}
+.theme-choice.selected .theme-image{opacity:.48}
+.theme-choice:after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(110deg,rgba(8,8,8,.8),rgba(8,8,8,.32) 70%,rgba(8,8,8,.72))}
+.theme-choice .theme-swatch,.theme-choice strong,.theme-choice small,.theme-choice em{position:relative;z-index:1}
+.sound-settings h4{font:600 23px 'Cormorant Garamond',serif;color:#eee3d0;margin:0 0 8px}
+.sound-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:14px 0}
+.sound-toggle{display:flex;align-items:center;gap:9px;color:#e7dbc7;font-size:11px}
+.sound-toggle input{accent-color:#b5363e;width:17px;height:17px}
+.sound-settings>small{display:block;color:#928878;font-size:9px;line-height:1.6}
+@media(max-width:560px){
+  .tribute-identity{grid-template-columns:104px minmax(0,1fr);gap:13px;padding:14px;margin:12px 0}
+  .tribute-identity-portrait{width:104px;height:132px}
+  .tribute-identity-info h2{font-size:28px;margin:7px 0 9px}
+  .tribute-identity-info .eyebrow{font-size:7px;letter-spacing:1px}
+  .tribute-tags{gap:5px}
+  .tribute-tags span{font-size:7px;padding:6px}
+  .tribute-identity-info p{font-size:6px;letter-spacing:1px}
+  .tribute-seal{display:none}
+  .tribute-identity:after{font-size:5px;right:8px;top:5px;letter-spacing:1px}
+}
