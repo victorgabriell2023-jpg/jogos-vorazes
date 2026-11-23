@@ -14,12 +14,12 @@ function CapitolEmblem({ size = 28 }) {
   </svg>;
 }
 
-function readSaved(key) {
+function readSaved(key, fallback = []) {
   try {
     const value = localStorage.getItem(key);
-    return value ? JSON.parse(value) : [];
+    return value ? JSON.parse(value) : fallback;
   } catch {
-    return [];
+    return fallback;
   }
 }
 
@@ -202,7 +202,7 @@ function MasterPanel({ characters, setCharacters, campaigns }) {
         })}</div>
         <div className="master-extra-grid">
           <label>Condições atuais<textarea value={(character.conditions || []).join('\n')} onChange={e => updateConditions(character.id,e.target.value)} placeholder="Uma condição por linha..."/></label>
-          <label>Anotações privadas do mestre<textarea value={character.masterNotes || ''} onChange={e => updateNotes(character.id,e.target.value)} placeholder="Informações reservadas, consequências, segredos..."/></label>
+          <label>Anotações do mestre (salvas neste dispositivo)<textarea value={character.masterNotes || ''} onChange={e => updateNotes(character.id,e.target.value)} placeholder="Informações reservadas, consequências, segredos..."/></label>
         </div>
       </article>;
     })}</div> : <div className="empty">{characters.length ? 'Nenhum tributo corresponde a esse filtro.' : 'Cadastre os personagens dos jogadores para montar o painel do mestre.'}</div>}
@@ -272,8 +272,8 @@ export default function App() {
   const [characters, setCharacters] = useState(() => readSaved('hv-characters'));
   const [campaigns, setCampaigns] = useState(() => readSaved('hv-campaigns'));
   const [sessions, setSessions] = useState(() => readSaved('hv-sessions'));
-  const [arena, setArena] = useState(() => readSaved('hv-arena') || {});
-  const [settings, setSettings] = useState(() => readSaved('hv-settings') || { theme: 'capital', accent: 'gold', backgroundImage: '' });
+  const [arena, setArena] = useState(() => readSaved('hv-arena', {}));
+  const [settings, setSettings] = useState(() => readSaved('hv-settings', { theme: 'capital', accent: 'theme', backgroundImage: '' }));
   const [districtImages, setDistrictImages] = useState(() => {
     try { return JSON.parse(localStorage.getItem('hv-district-images') || '{}'); }
     catch { return {}; }
@@ -350,7 +350,7 @@ export default function App() {
   const active = characters.find(c => c.id === selected);
   const activeDistrictTheme = getDistrictTheme(active?.district);
   const activeDistrictImage = activeDistrictTheme ? districtImages[activeDistrictTheme.number]?.url : '';
-  const filtered = useMemo(() => characters.filter(c => c.name.toLowerCase().includes(search.toLowerCase())), [characters, search]);
+  const filtered = useMemo(() => characters.filter(c => (c.name || '').toLowerCase().includes(search.toLowerCase())), [characters, search]);
   const updateCharacter = patch => setCharacters(items => items.map(c => c.id === selected ? { ...c, ...patch } : c));
   const addHistoryEntry = () => updateCharacter({ history: [...(active?.history || []), { id: Date.now(), date: new Date().toLocaleDateString('en-CA'), title: 'Novo acontecimento', description: '' }] });
   const updateHistoryEntry = (id, patch) => updateCharacter({ history: (active?.history || []).map(entry => entry.id === id ? { ...entry, ...patch } : entry) });
@@ -451,7 +451,7 @@ export default function App() {
   };
   const addCampaign = () => setCampaigns(items => [...items, { id: Date.now(), name: 'Nova campanha', description: '', characterIds: [] }]);
   const updateCampaign = (id, patch) => setCampaigns(items => items.map(c => c.id === id ? { ...c, ...patch } : c));
-  const addSession = () => setSessions(items => [...items, { id: Date.now(), campaignId: campaigns[0]?.id || '', title: 'Nova sessão', date: new Date().toLocaleDateString('en-CA'), summary: '', events: [] }]);
+  const addSession = () => setSessions(items => [...items, { id: Date.now(), campaignId: campaigns[0]?.id ? String(campaigns[0].id) : '', title: 'Nova sessão', date: new Date().toLocaleDateString('en-CA'), summary: '', events: [] }]);
   const updateSession = (id, patch) => setSessions(items => items.map(session => session.id === id ? { ...session, ...patch } : session));
   const title = nav.find(n => n[1] === page)?.[0] || 'Visão geral';
 
@@ -487,12 +487,12 @@ export default function App() {
                 <textarea value={entry.description || ''} onChange={e => updateHistoryEntry(entry.id, {description:e.target.value})} placeholder="O que aconteceu? Quem participou? Quais foram as consequências?"/>
               </article>)}
             </div>
-            <button className="danger" onClick={() => {setCharacters(items => items.filter(c => c.id !== active.id));setSelected(null)}}><Trash2 size={15}/> Excluir personagem</button></div>
+            <button className="danger" onClick={() => { if (window.confirm('Excluir este tributo? Essa ação não pode ser desfeita.')) { setCharacters(items => items.filter(c => c.id !== active.id)); setCampaigns(items => items.map(campaign => ({ ...campaign, characterIds: (campaign.characterIds || []).filter(id => id !== active.id) }))); setSelected(null); } }}><Trash2 size={15}/> Excluir personagem</button></div>
         </div></> : <><div className="section-heading"><div><span className="eyebrow">CADASTRO DE TRIBUTOS</span><h3>Personagens</h3></div><button className="primary" onClick={addCharacter}><Plus size={16}/> Novo personagem</button></div><div className="search"><Search size={16}/><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar personagem..."/></div><div className="character-grid">{filtered.map(c => <button className="character-card" key={c.id} style={getDistrictTheme(c.district) ? {'--district-accent':getDistrictTheme(c.district).accent,'--district-deep':getDistrictTheme(c.district).deep} : {}} onClick={() => setSelected(c.id)}><>{c.image ? <img className="character-thumb" src={c.image} alt="" /> : <div className="avatar"><Users size={25}/></div>}</><span>{c.district || 'DISTRITO NÃO DEFINIDO'}</span><strong>{c.name}</strong><small>EDITAR FICHA <ChevronRight size={13}/></small></button>)}</div></>}
       </section>}
       {page === 'campaigns' && <section className="content"><div className="section-heading"><div><span className="eyebrow">HISTÓRIAS DE PANEM</span><h3>Campanhas</h3></div><button className="primary" onClick={addCampaign}><Plus size={16}/> Nova campanha</button></div>
         {campaigns.map(c => <article className="campaign-card" key={c.id}>
-          <div className="campaign-title"><input aria-label="Nome da campanha" value={c.name} onChange={e => updateCampaign(c.id, {name:e.target.value})}/><button className="icon-button" onClick={() => setCampaigns(items => items.filter(x => x.id !== c.id))} aria-label="Excluir campanha"><Trash2 size={16}/></button></div>
+          <div className="campaign-title"><input aria-label="Nome da campanha" value={c.name} onChange={e => updateCampaign(c.id, {name:e.target.value})}/><button className="icon-button" onClick={() => { if (window.confirm('Excluir esta campanha? As sessões serão mantidas, mas ficarão sem campanha vinculada.')) { setCampaigns(items => items.filter(x => x.id !== c.id)); setSessions(items => items.map(session => String(session.campaignId) === String(c.id) ? { ...session, campaignId: '' } : session)); } }} aria-label="Excluir campanha"><Trash2 size={16}/></button></div>
           <label className="campaign-description">Descrição / resumo<textarea value={c.description || ''} onChange={e => updateCampaign(c.id, {description:e.target.value})} placeholder="Registre o cenário, os acontecimentos e os objetivos desta campanha..."/></label>
           <div className="campaign-members"><strong>Personagens participantes</strong>{characters.length ? characters.map(ch => <label key={ch.id}><input type="checkbox" checked={(c.characterIds || []).includes(ch.id)} onChange={e => updateCampaign(c.id, {characterIds:e.target.checked ? [...(c.characterIds || []), ch.id] : (c.characterIds || []).filter(id => id !== ch.id)})}/>{ch.name} <span>({ch.district || 'Distrito não definido'})</span></label>) : <p className="muted">Cadastre personagens para vinculá-los à campanha.</p>}</div>
         </article>)}
