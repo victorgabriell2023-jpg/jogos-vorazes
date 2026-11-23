@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import RulesPanel from './RulesPanel.jsx';
-import { derived } from './rules.js';
+import { ATTRIBUTES, SKILLS, AGE_MODIFIERS, DISTRICT_MODIFIERS, derived, effectiveSkills } from './rules.js';
 import { BookOpen, Users, Flag, Swords, Settings, Plus, Search, Bird, ChevronRight, Trash2, Download, Upload, MapPin, Palette, History, Image as ImageIcon, ShieldCheck } from 'lucide-react';
 
 function CapitolEmblem({ size = 28 }) {
@@ -45,6 +45,67 @@ function EditableValues({ title, values = {}, onChange }) {
       <input aria-label={`Valor de ${key}`} value={value} onChange={e => onChange({ ...values, [key]: e.target.value })} placeholder="Valor" />
       <button type="button" className="icon-button" onClick={() => remove(key)} aria-label="Excluir campo"><Trash2 size={14}/></button>
     </div>)}
+  </div>;
+}
+
+
+const attributeInfo = {
+  Força: 'Potência física, esforço e capacidade de impor força.',
+  Agilidade: 'Coordenação, reflexos, equilíbrio e rapidez.',
+  Vigor: 'Resistência, saúde e capacidade de suportar esforço.',
+  Inteligência: 'Raciocínio, memória, análise e conhecimento.',
+  Carisma: 'Presença, comunicação e influência sobre pessoas.'
+};
+const skillGroups = [
+  { name:'Corpo & movimento', icon:'✦', skills:['Atletismo','Combate','Arremesso','Furtividade'] },
+  { name:'Sobrevivência', icon:'⌖', skills:['Sobrevivência','Caça','Rastreamento','Primeiros Socorros','Conhecimento de Plantas','Conhecimento de Animais'] },
+  { name:'Técnica & percepção', icon:'⚙', skills:['Engenharia','Percepção','Improvisação'] },
+  { name:'Influência & social', icon:'◇', skills:['Persuasão','Enganação','Intimidação'] }
+];
+function CharacterBuildSheet({ stats = {}, skills = {}, age, district, onStats, onSkills }) {
+  const totalAttributes = ATTRIBUTES.reduce((sum, key) => sum + (Number(stats[key]) || 0), 0);
+  const totalSkills = SKILLS.reduce((sum, key) => sum + (Number(skills[key]) || 0), 0);
+  const finalSkills = effectiveSkills({ stats, skills, age, district });
+  const ageMod = AGE_MODIFIERS[Number(age)];
+  const districtMod = DISTRICT_MODIFIERS[Number(district)];
+  const changeValue = (group, key, delta, setter, max) => {
+    const source = group || {};
+    const value = Math.max(0, Math.min(max, (Number(source[key]) || 0) + delta));
+    setter({ ...source, [key]: value });
+  };
+  const modifierFor = key => {
+    let value = 0;
+    if (ageMod?.[0] === key) value += ageMod[1];
+    if (ageMod?.[2] === key) value += ageMod[3];
+    if (districtMod?.[0] === key) value += districtMod[1];
+    if (districtMod?.[2] === key) value += districtMod[3];
+    return value;
+  };
+  return <div className="character-build">
+    <section className="build-panel attributes-panel">
+      <div className="build-panel-heading"><div><span className="eyebrow">BASE DO TRIBUTO • 01</span><h3>Atributos</h3><p>As cinco capacidades fundamentais do personagem.</p></div><div className="point-counter"><strong>{totalAttributes}<small>/ 10</small></strong><span>PONTOS INICIAIS</span></div></div>
+      <div className="attribute-grid">{ATTRIBUTES.map((key,index) => <article className="attribute-card" key={key}>
+        <div className="attribute-index">0{index+1}</div><div className="attribute-copy"><strong>{key}</strong><small>{attributeInfo[key]}</small></div>
+        <div className="attribute-control"><button type="button" onClick={() => changeValue(stats,key,-1,onStats,5)} aria-label={'Diminuir '+key}>−</button><input aria-label={key} type="number" min="0" max="5" value={Number(stats[key])||0} onChange={e=>onStats({...stats,[key]:Math.max(0,Math.min(5,Number(e.target.value)||0))})}/><button type="button" onClick={() => changeValue(stats,key,1,onStats,5)} aria-label={'Aumentar '+key}>+</button></div>
+        <div className="attribute-meter"><i style={{width:((Number(stats[key])||0)/5*100)+'%'}}/></div>
+      </article>)}</div>
+      <div className="build-ruleline"><span>Criação: 10 pontos no total, até 3 por atributo.</span><span>Progressão: máximo 5.</span></div>
+      {totalAttributes !== 10 && <p className="build-feedback">{totalAttributes < 10 ? 'Ainda há '+(10-totalAttributes)+' ponto(s) de atributo para distribuir.' : 'Atributos acima dos 10 pontos iniciais: progresso além da criação.'}</p>}
+    </section>
+    <section className="build-panel skills-panel">
+      <div className="build-panel-heading"><div><span className="eyebrow">APTIDÕES • 02</span><h3>Perícias</h3><p>Competências treinadas. Bônus de idade e distrito aparecem separados do valor base.</p></div><div className="point-counter"><strong>{totalSkills}<small>/ 8</small></strong><span>PONTOS INICIAIS</span></div></div>
+      <div className="skill-groups">{skillGroups.map(group=><section className="skill-group" key={group.name}>
+        <header><span>{group.icon}</span><h4>{group.name}</h4><small>{group.skills.length} perícias</small></header>
+        <div className="skill-list">{group.skills.map(key=>{const base=Number(skills[key])||0, mod=modifierFor(key), effective=finalSkills[key]??base;return <div className="skill-row" key={key}>
+          <div className="skill-name"><strong>{key}</strong><small>{mod ? (mod>0?'Bônus ':'Penalidade ')+(mod>0?'+':'')+mod+' contextual' : 'Sem modificador'}</small></div>
+          <div className="skill-value"><button type="button" onClick={()=>changeValue(skills,key,-1,onSkills,10)} aria-label={'Diminuir '+key}>−</button><input aria-label={'Valor base de '+key} type="number" min="0" max="10" value={base} onChange={e=>onSkills({...skills,[key]:Math.max(0,Math.min(10,Number(e.target.value)||0))})}/><button type="button" onClick={()=>changeValue(skills,key,1,onSkills,10)} aria-label={'Aumentar '+key}>+</button></div>
+          <div className="skill-effective"><span>FINAL</span><strong className={mod>0?'positive':mod<0?'negative':''}>{effective}</strong></div>
+        </div>})}</div>
+      </section>)}</div>
+      <div className="build-ruleline"><span>Criação: 8 pontos no total, até 2 por perícia.</span><span>Valor final = base + idade + distrito.</span></div>
+      {totalSkills !== 8 && <p className="build-feedback">{totalSkills < 8 ? 'Ainda há '+(8-totalSkills)+' ponto(s) de perícia para distribuir.' : 'Perícias acima dos 8 pontos iniciais: progresso além da criação.'}</p>}
+      <div className="modifier-summary"><div><span>IDADE</span><strong>{ageMod ? ageMod[0]+' +'+ageMod[1]+' • '+ageMod[2]+' '+ageMod[3] : 'Defina idade entre 12 e 18'}</strong></div><div><span>DISTRITO</span><strong>{districtMod ? districtMod[0]+' +'+districtMod[1]+' • '+districtMod[2]+' '+districtMod[3] : Number(district)===13 ? 'Distrito 13: bônus ainda não definidos' : 'Defina o distrito'}</strong></div></div>
+    </section>
   </div>;
 }
 
@@ -413,8 +474,7 @@ export default function App() {
         {active ? <><button className="back" onClick={() => setSelected(null)}>← Todos os personagens</button><div className="tribute-identity" style={activeDistrictTheme ? {'--district-accent':activeDistrictTheme.accent,'--district-deep':activeDistrictTheme.deep} : {}}><div className="tribute-identity-portrait">{active.image ? <img src={active.image} alt={'Retrato de ' + active.name}/> : <div className="avatar large"><Users size={38}/></div>}</div><div className="tribute-identity-info"><span className="eyebrow">DOSSIÊ OFICIAL • TRIBUTO</span><h2>{active.name || 'Tributo sem nome'}</h2><div className="tribute-tags"><span>DISTRITO {active.district || '—'}</span><span>{active.age ? active.age + ' ANOS' : 'IDADE NÃO INFORMADA'}</span><span>{(active.conditions || []).length ? (active.conditions || []).length + ' CONDIÇÃO(ÕES)' : 'STATUS NÃO REGISTRADO'}</span></div><p>REGISTRO INDIVIDUAL • PANEM / ARQUIVO CENTRAL</p></div><span className="tribute-seal"><CapitolEmblem size={58}/></span></div>{(() => { const theme = getDistrictTheme(active.district); return <div className="district-profile" style={{...(theme ? {'--district-accent':theme.accent,'--district-deep':theme.deep} : {}), ...(activeDistrictImage ? {backgroundImage:'linear-gradient(90deg,rgba(13,12,11,.93),rgba(13,12,11,.65)),url("'+activeDistrictImage+'")'} : {})}}><div className="district-profile-top"><span className="eyebrow">IDENTIDADE DO DISTRITO {theme ? theme.number : ''}</span><strong>{theme ? theme.name : 'Distrito não definido'}</strong></div><p>{theme ? theme.note : 'Informe o número do distrito para aplicar sua identidade visual.'}</p></div>; })()}<div className="profile-overview"><div><span>DISTRITO</span><strong>{active.district || "—"}</strong></div><div><span>IDADE</span><strong>{active.age || "—"}</strong></div><div><span>ATRIBUTOS</span><strong>{Object.keys(active.stats || {}).length}</strong></div><div><span>REGISTROS</span><strong>{(active.history || []).length}</strong></div></div><div className="editor">
           <div className="portrait"><>{active.image ? <img className="portrait-image" src={active.image} alt="Retrato do personagem" onError={e => { e.currentTarget.style.display = 'none'; }}/> : <div className="avatar large"><Users size={38}/></div>}</><label className="photo-picker"><span><Plus size={15}/> Escolher foto da galeria</span><input type="file" accept="image/*" onChange={e => { uploadPortrait(e.target.files?.[0]); e.target.value = ''; }}/></label><label className="upload">Ou usar URL do retrato<input value={active.image || ''} onChange={e => updateCharacter({image:e.target.value})} placeholder="Cole um link de imagem"/></label>{active.image && <button type="button" className="text-button remove-photo" onClick={() => updateCharacter({image:''})}>Remover retrato</button>}</div>
           <div className="fields"><label>Nome<input value={active.name} onChange={e => updateCharacter({name:e.target.value})}/></label><div className="two"><label>Distrito<input value={active.district} onChange={e => updateCharacter({district:e.target.value})} placeholder="Ex.: 3"/></label><label>Idade<input value={active.age} onChange={e => updateCharacter({age:e.target.value})} placeholder="Idade"/></label></div><label>História<textarea value={active.story} onChange={e => updateCharacter({story:e.target.value})} placeholder="Conte a história do personagem..."/></label><label>Aparência<textarea value={active.appearance || ''} onChange={e => updateCharacter({appearance:e.target.value})} placeholder="Descreva características visuais, roupas, marcas e detalhes do tributo..."/></label><p className="note">Ficha totalmente editável. Os cálculos podem ser ajustados manualmente; os limites e valores iniciais ainda não definidos pelo manual ficam sob controle do mestre.</p>
-            <EditableValues title="Atributos" values={active.stats} onChange={stats => updateCharacter({stats})}/>
-            <EditableValues title="Perícias" values={active.skills} onChange={skills => updateCharacter({skills})}/>
+            <CharacterBuildSheet stats={active.stats || {}} skills={active.skills || {}} age={active.age} district={active.district} onStats={stats => updateCharacter({stats})} onSkills={skills => updateCharacter({skills})}/>
             <StatusTracks tracks={active.tracks || []} stats={active.stats || {}} district={active.district || ""} capacityOverride={active.carryOverride} onCapacityOverride={carryOverride => updateCharacter({carryOverride})} onChange={tracks => updateCharacter({tracks})}/>
             <EditableItems title="Inventário" items={active.inventory} onChange={inventory => updateCharacter({inventory})}/>
             <EditableItems title="Condições" items={active.conditions} onChange={conditions => updateCharacter({conditions})}/>
