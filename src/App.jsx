@@ -1,6 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BookOpen, Users, Flag, Swords, Settings, Plus, Search, Bird, ChevronRight, Trash2, Download, Upload, MapPin, Palette, History, Image as ImageIcon } from 'lucide-react';
 
+function CapitolEmblem({ size = 28 }) {
+  return <svg className="capitol-emblem" width={size} height={size} viewBox="0 0 100 100" role="img" aria-label="Emblema da Capital">
+    <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+    <circle cx="50" cy="50" r="39" fill="none" stroke="currentColor" strokeWidth=".7" strokeDasharray="2 3"/>
+    <path d="M18 37 L50 17 L82 37" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinejoin="round"/>
+    <path d="M24 40 H76 M29 43 V69 M40 43 V69 M50 43 V69 M60 43 V69 M71 43 V69 M23 72 H77 L82 78 H18 Z" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinejoin="round"/>
+    <path d="M12 84 H88 M50 7 V13 M50 87 V93 M7 50 H13 M87 50 H93" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M33 31 L50 25 L67 31" fill="none" stroke="currentColor" strokeWidth="1.4"/>
+  </svg>;
+}
+
 function readSaved(key) {
   try {
     const value = localStorage.getItem(key);
@@ -186,7 +197,7 @@ export default function App() {
 
   return <div className="shell" style={appearance}>
     <aside className="sidebar">
-      <div className="brand"><div className="seal"><Bird size={25}/></div><div><span>ARQUIVOS DA CAPITAL</span><strong>JOGOS VORAZES</strong></div></div>
+      <div className="brand"><div className="seal"><CapitolEmblem size={31}/></div><div><span>ARQUIVOS DA CAPITAL</span><strong>JOGOS VORAZES</strong></div></div>
       <div className="season-label">COMPANION DE RPG</div>
       <nav>{nav.map(([label, key, Icon]) => <button key={key} className={page === key ? 'nav-item active' : 'nav-item'} onClick={() => { setPage(key); setSelected(null); }}><Icon size={17}/>{label}<ChevronRight size={14}/></button>)}</nav>
       <div className="sidebar-bottom"><span>QUE A SORTE ESTEJA</span><b>SEMPRE A SEU FAVOR.</b><small>VERSÃO 0.1 · EM DESENVOLVIMENTO</small></div>
@@ -194,7 +205,7 @@ export default function App() {
     <main className="main">
       <header className="topbar"><div><span className="eyebrow">PANEM / REGISTRO CENTRAL</span><h1>{active ? active.name : title}</h1></div><div className="top-actions"><span className="status-dot"/> DADOS SALVOS LOCALMENTE</div></header>
       {page === 'overview' && <section className="content">
-        <div className="hero"><div className="hero-copy"><span className="eyebrow">O REGISTRO COMEÇA AQUI</span><h2>Que os jogos<br/><em>comecem.</em></h2><p>Organize seus tributos, campanhas e sessões em um só lugar. Este espaço será moldado pelo sistema de regras da sua mesa.</p><button className="primary" onClick={addCharacter}><Plus size={16}/> Criar personagem</button></div><div className="mock-seal"><Bird size={116}/><span>CAPITÓLIO</span></div></div>
+        <div className="hero"><div className="hero-copy"><span className="eyebrow">O REGISTRO COMEÇA AQUI</span><h2>Que os jogos<br/><em>comecem.</em></h2><p>Organize seus tributos, campanhas e sessões em um só lugar. Este espaço será moldado pelo sistema de regras da sua mesa.</p><button className="primary" onClick={addCharacter}><Plus size={16}/> Criar personagem</button></div><div className="mock-seal"><CapitolEmblem size={142}/><span>A CAPITAL DE PANEM</span></div></div>
         <div className="stats-row"><div className="stat-card"><span>TRIBUTOS REGISTRADOS</span><strong>{characters.length}</strong><small>Personagens cadastrados</small></div><div className="stat-card"><span>CAMPANHAS</span><strong>{campaigns.length}</strong><small>Histórias em andamento</small></div><div className="stat-card"><span>SESSÕES REGISTRADAS</span><strong>{sessions.length}</strong><small>Encontros documentados</small></div></div>
         <div className="section-heading"><div><span className="eyebrow">ACESSO RÁPIDO</span><h3>Seus registros</h3></div><button className="text-button" onClick={() => setPage('characters')}>Ver personagens <ChevronRight size={15}/></button></div>
         {characters.length ? <div className="character-grid">{characters.slice(0,3).map(c => <button className="character-card" key={c.id} style={getDistrictTheme(c.district) ? {'--district-accent':getDistrictTheme(c.district).accent,'--district-deep':getDistrictTheme(c.district).deep} : {}} onClick={() => {setSelected(c.id);setPage('characters')}}><>{c.image ? <img className="character-thumb" src={c.image} alt="" /> : <div className="avatar"><Users size={25}/></div>}</><span>{c.district || 'DISTRITO NÃO DEFINIDO'}</span><strong>{c.name}</strong><small>ABRIR FICHA <ChevronRight size={13}/></small></button>)}</div> : <div className="empty">Nenhum tributo registrado. Crie o primeiro personagem para começar.</div>}
