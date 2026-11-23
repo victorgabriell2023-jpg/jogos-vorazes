@@ -134,8 +134,10 @@ export default function App() {
   const [search, setSearch] = useState('');
   const openingAudio = useRef(null);
   const fadeTimer = useRef(null);
+  const fadeInterval = useRef(null);
   const startOpeningAudio = () => {
     if (fadeTimer.current) window.clearTimeout(fadeTimer.current);
+    if (fadeInterval.current) window.clearInterval(fadeInterval.current);
     if (!openingAudio.current) {
       openingAudio.current = new Audio(CAPITOL_ANTHEM);
       openingAudio.current.preload = 'auto';
@@ -147,11 +149,12 @@ export default function App() {
     audio.play().then(() => {
       fadeTimer.current = window.setTimeout(() => {
         const fadeStarted = Date.now();
-        const fade = window.setInterval(() => {
+        fadeInterval.current = window.setInterval(() => {
           const progress = Math.min(1, (Date.now() - fadeStarted) / 2000);
           audio.volume = Math.max(0, 1 - progress);
           if (progress >= 1) {
-            window.clearInterval(fade);
+            window.clearInterval(fadeInterval.current);
+            fadeInterval.current = null;
             audio.pause();
             audio.currentTime = 0;
           }
@@ -192,6 +195,7 @@ export default function App() {
     return () => {
       window.clearTimeout(timer);
       if (fadeTimer.current) window.clearTimeout(fadeTimer.current);
+      if (fadeInterval.current) window.clearInterval(fadeInterval.current);
     };
   }, []);
   const active = characters.find(c => c.id === selected);
@@ -358,7 +362,7 @@ export default function App() {
           <label className="arena-field">Imagem adicional de fundo (opcional)<input value={settings.backgroundImage || ''} onChange={e => setSettings(s => ({...s,backgroundImage:e.target.value}))} placeholder="Cole um link de imagem para personalizar ainda mais"/></label>
           <button className="text-button" onClick={() => setSettings({theme:'capital',accent:'theme',backgroundImage:''})}>Restaurar identidade da Capital</button>
         </div>
-        <div className="settings-card sound-settings"><h4>Hino de Panem • Abertura da Capital</h4><p>O hino toca ao abrir o aplicativo: volume normal nos primeiros 10 segundos e redução gradual nos 2 segundos seguintes, até silenciar. A reprodução não reinicia ao trocar de tela.</p><div className="sound-actions"><label className="sound-toggle"><input type="checkbox" checked={settings.soundEnabled !== false} onChange={e => { setSettings(s => ({...s,soundEnabled:e.target.checked})); if (e.target.checked) startOpeningAudio(); else if (openingAudio.current) { openingAudio.current.pause(); openingAudio.current.currentTime = 0; if (fadeTimer.current) window.clearTimeout(fadeTimer.current); } }}/> Tocar ao abrir o aplicativo</label><button type="button" className="text-button" onClick={startOpeningAudio}>▶ Testar abertura</button></div><small>Faixa de áudio armazenada localmente no aplicativo.</small></div>
+        <div className="settings-card sound-settings"><h4>Hino de Panem • Abertura da Capital</h4><p>O hino toca ao abrir o aplicativo: volume normal nos primeiros 10 segundos e redução gradual nos 2 segundos seguintes, até silenciar. A reprodução não reinicia ao trocar de tela.</p><div className="sound-actions"><label className="sound-toggle"><input type="checkbox" checked={settings.soundEnabled !== false} onChange={e => { setSettings(s => ({...s,soundEnabled:e.target.checked})); if (e.target.checked) startOpeningAudio(); else if (openingAudio.current) { openingAudio.current.pause(); openingAudio.current.currentTime = 0; if (fadeTimer.current) window.clearTimeout(fadeTimer.current); if (fadeInterval.current) window.clearInterval(fadeInterval.current); } }}/> Tocar ao abrir o aplicativo</label><button type="button" className="text-button" onClick={startOpeningAudio}>▶ Testar abertura</button></div><small>Faixa de áudio armazenada localmente no aplicativo.</small></div>
         <div className="settings-card"><h4><Download size={17}/> Backup e transferência</h4><p>Exporte personagens, campanhas, sessões, Arena e preferências em um arquivo JSON. Para recuperar ou transferir, importe esse arquivo em outro navegador.</p><div className="backup-actions"><button className="primary" onClick={exportBackup}><Download size={15}/> Exportar backup</button><label className="primary file-import"><Upload size={15}/> Importar backup<input type="file" accept="application/json,.json" onChange={e => {importBackup(e.target.files?.[0]);e.target.value='';}}/></label></div>{importStatus && <p className="backup-status">{importStatus}</p>}</div>
         <div className="settings-card"><h4>Sobre o salvamento</h4><p>Os dados são guardados neste navegador e neste dispositivo. O backup permite transportar os registros manualmente, mas ainda não existe sincronização automática na nuvem.</p></div>
       </section>}
