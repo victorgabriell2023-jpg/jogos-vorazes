@@ -86,3 +86,11 @@
 .file-import input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
 .backup-status{border-left:2px solid var(--app-accent,#b9975c);padding-left:10px;color:#d4c6a8!important}
 @media(max-width:560px){.arena-columns{grid-template-columns:1fr}.settings-card{padding:14px}.backup-actions>*{width:100%;justify-content:center}.arena-tag{display:none}}
+
+
+.character-thumb{display:block;width:48px;height:48px;object-fit:cover;border:1px solid var(--district-accent,#66563d);margin-bottom:16px}
+.profile-overview{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0 4px}
+.profile-overview>div{border:1px solid #39352e;background:var(--app-panel,#1d1c19);padding:12px 14px;min-width:0}
+.profile-overview span{display:block;color:#a99c82;font-size:8px;letter-spacing:1.3px}
+.profile-overview strong{display:block;margin-top:5px;color:var(--app-accent,#c8a66e);font:600 20px 'Cormorant Garamond';overflow-wrap:anywhere}
+@media(max-width:560px){.profile-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.character-thumb{width:48px;height:48px}}
