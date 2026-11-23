@@ -57,7 +57,7 @@ function StatusTracks({ tracks = [], stats = {}, district = '', onChange }) {
     {id:'cansaco',name:'Cansaço',current:0,max:10,autoMax:true},
     {id:'temperatura',name:'Temperatura',current:0,max:10,autoMax:false}
   ];
-  const rows = tracks.length ? tracks : defaults;
+  const rows = [...defaults.map(base => tracks.find(item => item.id === base.id || String(item.name || '').toLowerCase() === base.name.toLowerCase()) || base), ...tracks.filter(item => !defaults.some(base => item.id === base.id || String(item.name || '').toLowerCase() === base.name.toLowerCase()))];
   const calculated = derived({stats,district});
   const update = (index, patch) => onChange(rows.map((track, i) => i === index ? { ...track, ...patch } : track));
   const restore = index => update(index, { maxOverride:false, autoMax:true, max: rows[index].id === 'vida' ? (calculated.hpMax ?? rows[index].max) : 10 });
@@ -69,7 +69,7 @@ function StatusTracks({ tracks = [], stats = {}, district = '', onChange }) {
       const isStandard = ['fome','sede','cansaco'].includes(track.id);
       const formulaMax = isLife ? calculated.hpMax : (isStandard ? 10 : null);
       const overridden = track.maxOverride === true;
-      const maxValue = overridden || formulaMax === null ? track.max : formulaMax;
+      const maxValue = overridden ? track.max : (isLife && formulaMax === null ? '' : (formulaMax === null ? track.max : formulaMax));
       const current=Number(track.current)||0, max=Math.max(0,Number(maxValue)||0), pct=max>0?Math.max(0,Math.min(100,current/max*100)):0;
       return <div className="status-track-card" key={track.id || index}>
         <div className="status-track-head"><input aria-label="Nome do marcador" value={track.name} onChange={e => update(index, { name: e.target.value })}/><button type="button" className="icon-button" onClick={() => onChange(rows.filter((_, i) => i !== index))} aria-label="Excluir marcador"><Trash2 size={14}/></button></div>
