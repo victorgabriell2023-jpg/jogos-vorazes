@@ -58,3 +58,31 @@
 .photo-picker:hover span{background:#b5363e}
 .photo-picker input:focus-visible+span{outline:2px solid #e0bd55;outline-offset:3px}
 .remove-photo{margin-top:8px;color:#d28a88}
+
+
+/* Painéis adicionados: histórico, arena, aparência e backup */
+.shell{background-color:var(--app-bg,#171716)}
+.sidebar{background:color-mix(in srgb,var(--app-bg,#171716) 82%,#000 18%)}
+.main{background-color:transparent}
+.primary{background:var(--app-accent,#9d2930);border-color:var(--app-accent,#b24c4f)}
+.custom-section,.campaign-card,.session-card,.settings-card{background:var(--app-panel,#1d1c19)}
+.history-section .custom-heading h4,.settings-card h4{display:flex;align-items:center;gap:8px}
+.history-entry{border-top:1px solid #39352e;padding:12px 0;display:grid;gap:8px}
+.history-entry-head{display:flex;align-items:center;gap:10px}
+.history-entry-head input{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px solid #514839;color:#eee5d6;padding:9px 3px;font:600 18px 'Cormorant Garamond';outline:none}
+.history-date{width:max-content;max-width:100%;background:#171614;border:1px solid #39352e;color:#c8bda9;padding:8px;font:11px 'DM Sans'}
+.history-entry textarea,.arena-field textarea{display:block;width:100%;min-height:85px;resize:vertical;background:#171614;border:1px solid #39352e;color:#eee5d6;padding:11px;font:12px/1.6 'DM Sans';outline:none}
+.arena-tag{display:inline-flex;align-items:center;gap:6px;color:#c8a66e;font-size:10px;letter-spacing:1px}
+.arena-field{display:block;margin:16px 0;color:#b9a783;font-size:10px;letter-spacing:1px}
+.arena-field input,.arena-field select{display:block;width:100%;margin-top:7px;background:#171614;border:1px solid #39352e;color:#eee5d6;padding:11px;font:12px 'DM Sans';outline:none}
+.arena-field select option{background:#171614}
+.arena-columns{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.arena-map{display:block;width:100%;max-height:420px;object-fit:contain;background:#111;border:1px solid #514839;margin:12px 0}
+.settings-card{border:1px solid #39352e;padding:20px;margin:16px 0}
+.settings-card h4{font:600 22px 'Cormorant Garamond';margin:0 0 12px;color:#e9e2d4}
+.settings-card p{font-size:11px;line-height:1.7;color:#a49b89}
+.backup-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.file-import{position:relative;overflow:hidden;cursor:pointer}
+.file-import input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.backup-status{border-left:2px solid var(--app-accent,#b9975c);padding-left:10px;color:#d4c6a8!important}
+@media(max-width:560px){.arena-columns{grid-template-columns:1fr}.settings-card{padding:14px}.backup-actions>*{width:100%;justify-content:center}.arena-tag{display:none}}
