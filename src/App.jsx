@@ -137,18 +137,16 @@ export default function App() {
     reader.onerror = () => setImportStatus('Falha ao ler o arquivo selecionado.');
     reader.readAsText(file);
   };
-  const selectedDistrictTheme = String(settings.theme || '').startsWith('district-')
-    ? districtThemes[Number(String(settings.theme).replace('district-', ''))]
-    : null;
-  const baseTheme = settings.theme === 'forest'
-    ? { bg: '#172019', panel: '#20291f', accent: '#91a66a' }
-    : settings.theme === 'ocean'
-      ? { bg: '#172027', panel: '#202a32', accent: '#65a9bd' }
-      : { bg: '#171716', panel: '#1d1c19', accent: '#b9975c' };
+  const selectedDistrictNumber = String(settings.theme || '').startsWith('district-')
+    ? Number(String(settings.theme).replace('district-', '')) : null;
+  const selectedDistrictTheme = selectedDistrictNumber ? districtThemes[selectedDistrictNumber] : null;
+  const baseTheme = { bg: '#171716', panel: '#24211d', accent: '#b9975c' };
   const appearance = {
     '--app-bg': selectedDistrictTheme?.deep || baseTheme.bg,
-    '--app-panel': selectedDistrictTheme ? `color-mix(in srgb, ${selectedDistrictTheme.deep} 78%, white)` : baseTheme.panel,
+    '--app-panel': selectedDistrictTheme ? `color-mix(in srgb, ${selectedDistrictTheme.deep} 72%, #171614)` : baseTheme.panel,
     '--app-accent': settings.accent === 'red' ? '#b5363e' : settings.accent === 'teal' ? '#55a9a0' : selectedDistrictTheme?.accent || baseTheme.accent,
+    '--district-accent': selectedDistrictTheme?.accent || '#c6a36a',
+    '--district-deep': selectedDistrictTheme?.deep || '#30251d',
     ...(settings.backgroundImage ? { backgroundImage: 'linear-gradient(rgba(18,17,15,.91),rgba(18,17,15,.96)), url("' + settings.backgroundImage.replace(/"/g, '') + '")', backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' } : {})
   };
   const uploadPortrait = file => {
@@ -257,11 +255,16 @@ export default function App() {
       {page === 'rules' && <section className="content"><div className="placeholder"><div className="seal"><BookOpen size={30}/></div><span className="eyebrow">SISTEMA DA MESA</span><h2>Livro de regras</h2><p>Área reservada para cadastrar atributos, testes, recursos e cálculos oficiais quando o livro de regras for enviado. Nenhuma mecânica foi presumida.</p></div></section>}
       {page === 'settings' && <section className="content">
         <div className="section-heading"><div><span className="eyebrow">PREFERÊNCIAS DO APLICATIVO</span><h3>Personalização</h3></div><Palette size={22}/></div>
-        <div className="settings-card"><h4>Aparência</h4>
-          <label className="arena-field">Tema de fundo<select value={settings.theme || 'capital'} onChange={e => setSettings(s => ({...s,theme:e.target.value}))}><option value="capital">Capital — carvão e dourado</option>{Object.entries(districtThemes).map(([number, theme]) => <option key={number} value={`district-${number}`}>Distrito {number} — {theme.name}</option>)}</select></label>
-          <label className="arena-field">Cor de destaque<select value={settings.accent || 'gold'} onChange={e => setSettings(s => ({...s,accent:e.target.value}))}><option value="gold">Dourado</option><option value="red">Vermelho</option><option value="teal">Turquesa</option></select></label>
-          <label className="arena-field">Imagem de fundo por URL<input value={settings.backgroundImage || ''} onChange={e => setSettings(s => ({...s,backgroundImage:e.target.value}))} placeholder="Opcional: link de uma imagem"/></label>
-          <button className="text-button" onClick={() => setSettings({theme:'capital',accent:'gold',backgroundImage:''})}>Restaurar aparência padrão</button>
+        <div className="settings-card theme-settings">
+          <div className="theme-intro"><span className="eyebrow">IDENTIDADE VISUAL DE PANEM</span><h4>Escolha de qual distrito é o seu aplicativo</h4><p>Não é só uma troca de papel de parede. Cada identidade muda a paleta completa da interface: fundo, painéis, bordas, detalhes, cor dos destaques e atmosfera visual. A Capital tem sua própria identidade.</p></div>
+          <div className="theme-preview-grid">
+            <button type="button" className={(!selectedDistrictTheme ? 'theme-choice selected' : 'theme-choice')} style={{'--theme-accent':'#c6a36a','--theme-deep':'#30251d'}} onClick={() => setSettings(s => ({...s,theme:'capital'}))}><span className="theme-swatch"><i/><i/><i/></span><strong>A CAPITAL</strong><small>Carvão, aço e dourado</small><em>{!selectedDistrictTheme ? 'IDENTIDADE ATIVA' : 'Selecionar identidade'}</em></button>
+            {Object.entries(districtThemes).map(([number, theme]) => <button type="button" key={number} className={selectedDistrictNumber === Number(number) ? 'theme-choice selected' : 'theme-choice'} style={{'--theme-accent':theme.accent,'--theme-deep':theme.deep}} onClick={() => setSettings(s => ({...s,theme:`district-${number}`,accent:'theme'}))}><span className="theme-swatch"><i/><i/><i/></span><strong>DISTRITO {number.padStart(2,'0')}</strong><small>{theme.name}</small><em>{selectedDistrictNumber === Number(number) ? 'IDENTIDADE ATIVA' : 'Selecionar identidade'}</em></button>)}
+          </div>
+          {selectedDistrictTheme && <div className="active-theme-note"><span className="active-theme-number">D{String(selectedDistrictNumber).padStart(2,'0')}</span><div><strong>{selectedDistrictTheme.name}</strong><p>{selectedDistrictTheme.note}</p></div><span className="active-theme-line"/></div>}
+          <label className="arena-field">Cor de destaque personalizada<select value={settings.accent || 'theme'} onChange={e => setSettings(s => ({...s,accent:e.target.value}))}><option value="theme">Usar as cores próprias da identidade</option><option value="gold">Dourado</option><option value="red">Vermelho da Capital</option><option value="teal">Turquesa</option></select></label>
+          <label className="arena-field">Imagem adicional de fundo (opcional)<input value={settings.backgroundImage || ''} onChange={e => setSettings(s => ({...s,backgroundImage:e.target.value}))} placeholder="Cole um link de imagem para personalizar ainda mais"/></label>
+          <button className="text-button" onClick={() => setSettings({theme:'capital',accent:'theme',backgroundImage:''})}>Restaurar identidade da Capital</button>
         </div>
         <div className="settings-card"><h4><Download size={17}/> Backup e transferência</h4><p>Exporte personagens, campanhas, sessões, Arena e preferências em um arquivo JSON. Para recuperar ou transferir, importe esse arquivo em outro navegador.</p><div className="backup-actions"><button className="primary" onClick={exportBackup}><Download size={15}/> Exportar backup</button><label className="primary file-import"><Upload size={15}/> Importar backup<input type="file" accept="application/json,.json" onChange={e => {importBackup(e.target.files?.[0]);e.target.value='';}}/></label></div>{importStatus && <p className="backup-status">{importStatus}</p>}</div>
         <div className="settings-card"><h4>Sobre o salvamento</h4><p>Os dados são guardados neste navegador e neste dispositivo. O backup permite transportar os registros manualmente, mas ainda não existe sincronização automática na nuvem.</p></div>
