@@ -752,3 +752,24 @@ button:disabled{opacity:.42;cursor:not-allowed;transform:none}
   .main{padding-left:20px;padding-right:20px}
   .attribute-grid,.skill-groups{grid-template-columns:1fr}
 }
+
+
+/* Inventário de tributos: itens e armas com ficha compacta */
+.inventory-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.inventory-list{display:grid;gap:8px;margin-top:8px}
+.inventory-entry{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px 36px 10px 11px;border:1px solid rgba(190,160,105,.16);background:rgba(0,0,0,.15)}
+.inventory-entry.weapon-entry{border-color:color-mix(in srgb,var(--district-accent,#c6a36a) 48%,transparent);background:linear-gradient(110deg,rgba(190,160,105,.09),rgba(0,0,0,.18))}
+.inventory-entry-main{display:grid;grid-template-columns:minmax(0,1fr) 105px;gap:9px;align-items:center;min-width:0}
+.inventory-entry input,.inventory-entry select{width:100%;min-width:0;max-width:100%;padding:8px 7px;border:1px solid rgba(190,160,105,.22);border-radius:2px;background:#151411;color:#eee5d6;font:11px 'DM Sans'}
+.inventory-entry input::placeholder{color:#817968}
+.weapon-stats{display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,.65fr);gap:9px;grid-column:1/-1}
+.weapon-stats label{display:grid;gap:4px;color:#b9a783;font-size:8px;letter-spacing:1px;text-transform:uppercase}
+.weapon-stats input{font-size:11px;letter-spacing:normal;text-transform:none}
+.inventory-delete{position:absolute;right:7px;top:50%;transform:translateY(-50%)}
+@media(max-width:560px){
+  .inventory-entry{padding:9px 34px 9px 8px;gap:7px}
+  .inventory-entry-main{grid-template-columns:minmax(0,1fr) 88px;gap:6px}
+  .inventory-entry input,.inventory-entry select{padding:8px 5px;font-size:10px}
+  .weapon-stats{grid-template-columns:1fr 1fr;gap:6px}
+  .inventory-actions{gap:8px}
+}
