@@ -211,12 +211,34 @@ function MasterPanel({ characters, setCharacters, campaigns }) {
 }
 
 function EditableItems({ title, items = [], onChange }) {
-  const update = (index, value) => onChange(items.map((item, i) => i === index ? value : item));
-  return <div className="custom-section">
-    <div className="custom-heading"><h4>{title}</h4><button type="button" className="text-button" onClick={() => onChange([...items, ''])}><Plus size={14}/> Adicionar</button></div>
+  const update = (index, patch) => onChange(items.map((item, i) => {
+    if (i !== index) return item;
+    const current = typeof item === 'string' ? { name:item, kind:'item' } : item;
+    return { ...current, ...patch };
+  }));
+  const addItem = kind => onChange([...items, kind === 'weapon'
+    ? { name:'', kind:'weapon', weaponType:'Corpo a corpo', damage:'' }
+    : { name:'', kind:'item' }]);
+  const normalized = items.map(item => typeof item === 'string' ? { name:item, kind:'item' } : item);
+  return <div className={title === 'Inventário' ? 'custom-section inventory-section' : 'custom-section'}>
+    <div className="custom-heading"><h4>{title}</h4>{title === 'Inventário' ? <div className="inventory-actions"><button type="button" className="text-button" onClick={() => addItem('item')}><Plus size={14}/> Item</button><button type="button" className="text-button" onClick={() => addItem('weapon')}><Plus size={14}/> Arma</button></div> : <button type="button" className="text-button" onClick={() => onChange([...items, ''])}><Plus size={14}/> Adicionar</button>}</div>
     {items.length === 0 && <p className="muted">Nenhum item cadastrado.</p>}
-    {items.map((item, index) => <div className="custom-row single" key={index}>
-      <input value={item} onChange={e => update(index, e.target.value)} placeholder={`Novo item de ${title.toLowerCase()}`} />
+    {title === 'Inventário' ? <div className="inventory-list">
+      {normalized.map((item, index) => <article className={item.kind === 'weapon' ? 'inventory-entry weapon-entry' : 'inventory-entry'} key={item.id || index}>
+        <div className="inventory-entry-main">
+          <input aria-label="Nome do item" value={item.name || ''} onChange={e => update(index, {name:e.target.value})} placeholder={item.kind === 'weapon' ? 'Nome da arma' : 'Nome do item'}/>
+          <select aria-label="Categoria do inventário" value={item.kind === 'weapon' ? 'weapon' : 'item'} onChange={e => update(index, e.target.value === 'weapon' ? {kind:'weapon',weaponType:item.weaponType || 'Corpo a corpo',damage:item.damage || ''} : {kind:'item'})}>
+            <option value="item">Item</option><option value="weapon">Arma</option>
+          </select>
+        </div>
+        {item.kind === 'weapon' && <div className="weapon-stats">
+          <label>Tipo<input value={item.weaponType || ''} onChange={e => update(index, {weaponType:e.target.value})} placeholder="Ex.: corpo a corpo, distância..."/></label>
+          <label>Dano<input value={item.damage || ''} onChange={e => update(index, {damage:e.target.value})} placeholder="Definido pelo mestre"/></label>
+        </div>}
+        <button type="button" className="icon-button inventory-delete" onClick={() => onChange(items.filter((_, i) => i !== index))} aria-label="Excluir item"><Trash2 size={14}/></button>
+      </article>)}
+    </div> : normalized.map((item, index) => <div className="custom-row single" key={index}>
+      <input value={typeof items[index] === 'string' ? items[index] : (item.name || '')} onChange={e => onChange(items.map((value, i) => i === index ? e.target.value : value))} placeholder={`Novo item de ${title.toLowerCase()}`} />
       <button type="button" className="icon-button" onClick={() => onChange(items.filter((_, i) => i !== index))} aria-label="Excluir item"><Trash2 size={14}/></button>
     </div>)}
   </div>;
