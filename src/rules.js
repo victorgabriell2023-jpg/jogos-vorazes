@@ -31,7 +31,7 @@ export function effectiveSkills(character={}) {
 export function derived(character={}) {
   const stats=character.stats||{}, vigor=clamp(stats.Vigor,0,5), strength=clamp(stats.Força,0,5), district=Number(character.district);
   const districtBonus=Object.prototype.hasOwnProperty.call(DISTRICT_HP,district)?DISTRICT_HP[district]:null;
-  return {hpBase:16+vigor*2,hpDistrictBonus:districtBonus,hpMax:districtBonus===null?null:16+vigor*2+districtBonus,carry:6+strength*2,skills:effectiveSkills(character)};
+  return {hpBase:16+vigor*2,hpDistrictBonus:districtBonus,hpMax:districtBonus===null?null:16+vigor*2+districtBonus,defense:10+clamp(stats.Agilidade,0,5),carry:6+strength*2,skills:effectiveSkills(character)};
 }
 export function rollD20({attribute=0,skill=0,dc=12,mode='normal'}={}) {
   const a=1+Math.floor(Math.random()*20), b=mode==='normal'?null:1+Math.floor(Math.random()*20);
