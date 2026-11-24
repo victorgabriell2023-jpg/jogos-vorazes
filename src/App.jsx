@@ -115,8 +115,8 @@ function StatusTracks({ tracks = [], stats = {}, district = '', capacityOverride
     {id:'vida',name:'Vida',current:16,max:16,autoMax:true},
     {id:'fome',name:'Fome',current:0,max:10,autoMax:true},
     {id:'sede',name:'Sede',current:0,max:10,autoMax:true},
-    {id:'cansaco',name:'Cansaço',current:0,max:10,autoMax:true},
-    {id:'temperatura',name:'Temperatura',current:0,max:10,autoMax:false}
+    {id:'exaustao',name:'Exaustão',current:0,max:10,autoMax:true},
+    {id:'estabilidade',name:'Estabilidade emocional',current:10,max:10,autoMax:true}
   ];
   const rows = [...defaults.map(base => tracks.find(item => item.id === base.id || String(item.name || '').toLowerCase() === base.name.toLowerCase()) || base), ...tracks.filter(item => !defaults.some(base => item.id === base.id || String(item.name || '').toLowerCase() === base.name.toLowerCase()))];
   const calculated = derived({stats,district});
@@ -127,7 +127,7 @@ function StatusTracks({ tracks = [], stats = {}, district = '', capacityOverride
     <p className="muted">Vida, fome, sede e cansaço seguem os valores do sistema. Temperatura e marcadores extras ficam configuráveis. Você pode substituir qualquer máximo e restaurar o cálculo quando quiser.</p>
     {rows.map((track, index) => {
       const isLife = track.id === 'vida' || track.name?.toLowerCase() === 'vida';
-      const isStandard = ['fome','sede','cansaco'].includes(track.id);
+      const isStandard = ['fome','sede','exaustao','estabilidade'].includes(track.id);
       const formulaMax = isLife ? calculated.hpMax : (isStandard ? 10 : null);
       const overridden = track.maxOverride === true;
       const maxValue = overridden ? track.max : (isLife && formulaMax === null ? '' : (formulaMax === null ? track.max : formulaMax));
@@ -150,8 +150,8 @@ function MasterPanel({ characters, setCharacters, campaigns }) {
     { id:'vida', name:'Vida', current:16, max:16 },
     { id:'fome', name:'Fome', current:0, max:10 },
     { id:'sede', name:'Sede', current:0, max:10 },
-    { id:'cansaco', name:'Cansaço', current:0, max:10 },
-    { id:'temperatura', name:'Temperatura', current:0, max:10 }
+    { id:'exaustao', name:'Exaustão', current:0, max:10 },
+    { id:'estabilidade', name:'Estabilidade emocional', current:10, max:10 }
   ];
   const campaign = campaigns.find(item => String(item.id) === campaignId);
   const roster = characters.filter(character => {
@@ -159,7 +159,7 @@ function MasterPanel({ characters, setCharacters, campaigns }) {
     return inCampaign && (character.name || '').toLowerCase().includes(query.toLowerCase());
   });
   const tracksFor = character => defaults.map(base => {
-    const saved = (character.tracks || []).find(track => track.id === base.id || String(track.name || '').toLowerCase() === base.name.toLowerCase());
+    const saved = (character.tracks || []).find(track => track.id === base.id || (base.id==='exaustao'&&track.id==='cansaco') || String(track.name || '').toLowerCase() === base.name.toLowerCase());
     const merged = saved ? { ...base, ...saved } : base;
     if (base.id === 'vida' && merged.maxOverride !== true) {
       const calculated = derived({ stats: character.stats || {}, district: character.district || '' }).hpMax;
@@ -170,7 +170,9 @@ function MasterPanel({ characters, setCharacters, campaigns }) {
   const updateTrack = (characterId, trackId, patch) => setCharacters(items => items.map(character => {
     if (character.id !== characterId) return character;
     const tracks = tracksFor(character);
-    return { ...character, tracks: tracks.map(track => track.id === trackId ? { ...track, ...patch } : track) };
+    const survivalKey = ({fome:'fome',sede:'sede',exaustao:'exaustao',estabilidade:'estabilidade'})[trackId];
+    const nextTracks = tracks.map(track => track.id === trackId ? { ...track, ...patch } : track);
+    return { ...character, tracks: nextTracks, ...(survivalKey&&patch.current!==undefined?{survival:{...(character.survival||{}),[survivalKey]:Math.max(0,Math.min(10,Number(patch.current)||0))}}:{}) };
   }));
   const updateNotes = (characterId, masterNotes) => setCharacters(items => items.map(character => character.id === characterId ? { ...character, masterNotes } : character));
   const updateConditions = (characterId, value) => setCharacters(items => items.map(character => character.id === characterId ? { ...character, conditions: value.split('\n').map(item => item.trim()).filter(Boolean) } : character));
@@ -453,7 +455,7 @@ export default function App() {
     reader.readAsDataURL(file);
   };
   const addCharacter = () => {
-    const c = { id: Date.now(), name: 'Novo tributo', district: '', age: '', story: '', appearance: '', image: '', stats: {}, skills: {}, inventory: [], conditions: [], tracks: [{id:'vida',name:'Vida',current:16,max:16,autoMax:true},{id:'fome',name:'Fome',current:0,max:10},{id:'sede',name:'Sede',current:0,max:10},{id:'cansaco',name:'Cansaço',current:0,max:10},{id:'temperatura',name:'Temperatura',current:0,max:10}] };
+    const c = { id: Date.now(), name: 'Novo tributo', district: '', age: '', story: '', appearance: '', image: '', stats: {}, skills: {}, inventory: [], conditions: [], tracks: [{id:'vida',name:'Vida',current:16,max:16,autoMax:true},{id:'fome',name:'Fome',current:0,max:10},{id:'sede',name:'Sede',current:0,max:10},{id:'exaustao',name:'Exaustão',current:0,max:10},{id:'estabilidade',name:'Estabilidade emocional',current:10,max:10}] };
     setCharacters(items => [...items, c]); setSelected(c.id); setPage('characters');
   };
   const addCampaign = () => setCampaigns(items => [...items, { id: Date.now(), name: 'Nova campanha', description: '', characterIds: [] }]);
