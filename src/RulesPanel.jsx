@@ -18,8 +18,9 @@ export default function RulesPanel({characters,setCharacters}) {
   const [publicEvent,setPublicEvent]=useState('entrevista');
   const [actionMessage,setActionMessage]=useState('');
   const active=characters.find(c=>String(c.id)===String(id))||characters[0];
-  const update=patch=>{if(!active)return;setCharacters(items=>items.map(c=>c.id===active.id?{...c,...patch}:c));};
-  const stats=active?.stats||{}, skills=active?.skills||{}, social={popularidade:20,reputacao:50,patrocinadores:10,confianca:50,coesao:50,influencia:20,...(active?.social||{})}, survival={fome:0,sede:0,exaustao:0,...(active?.survival||{}),estabilidade:active?.survival?.estabilidade ?? active?.survival?.stability ?? 10};
+  const update=patch=>{if(!active)return;setCharacters(items=>items.map(c=>{if(c.id!==active.id)return c;let next={...c,...patch};if(patch.survival){const map={fome:'fome',sede:'sede',exaustao:'exaustao',estabilidade:'estabilidade'};const tracks=(c.tracks||[]).map(t=>{const key=map[t.id];return key&&patch.survival[key]!==undefined?{...t,current:patch.survival[key]}:t;});next={...next,tracks};}return next;}));};
+  const trackValue=key=>Number(active?.tracks?.find(t=>t.id===key||(key==='exaustao'&&t.id==='cansaco'))?.current??(key==='estabilidade'?10:0));
+  const stats=active?.stats||{}, skills=active?.skills||{}, social={popularidade:20,reputacao:50,patrocinadores:10,confianca:50,coesao:50,influencia:20,...(active?.social||{})}, survival={fome:trackValue('fome'),sede:trackValue('sede'),exaustao:trackValue('exaustao'),estabilidade:trackValue('estabilidade'),...(active?.survival||{}),estabilidade:active?.survival?.estabilidade ?? active?.survival?.stability ?? trackValue('estabilidade')};
   const derivedStats=useMemo(()=>derived(active||{}),[active]);
   const age=AGE_MODIFIERS[Number(active?.age)], district=DISTRICT_MODIFIERS[Number(active?.district)];
   const setNumber=(group,key,value)=>{const next={...(active[group]||{}),[key]:clamp(value,0,group==='stats'?3:group==='survival'?10:99)};if(group==='stats'&&ATTRIBUTES.reduce((sum,k)=>sum+field(next,k),0)>10)return;update({[group]:next});};
