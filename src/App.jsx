@@ -359,7 +359,7 @@ export default function App() {
   const activeDistrictTheme = getDistrictTheme(active?.district);
   const activeDistrictImage = activeDistrictTheme ? districtImages[activeDistrictTheme.number]?.url : '';
   const filtered = useMemo(() => characters.filter(c => (c.name || '').toLowerCase().includes(search.toLowerCase())), [characters, search]);
-  const updateCharacter = patch => setCharacters(items => items.map(c => c.id === selected ? { ...c, ...patch } : c));
+  const updateCharacter = patch => setCharacters(items => items.map(c => {if(c.id!==selected)return c;let next={...c,...patch};if(patch.tracks){const map={fome:'fome',sede:'sede',exaustao:'exaustao',estabilidade:'estabilidade'};const survival={...(c.survival||{})};patch.tracks.forEach(t=>{const key=map[t.id];if(key)survival[key]=Math.max(0,Math.min(10,Number(t.current)||0));});next={...next,survival};}return next;}));
   const addHistoryEntry = () => updateCharacter({ history: [...(active?.history || []), { id: Date.now(), date: new Date().toLocaleDateString('en-CA'), title: 'Novo acontecimento', description: '' }] });
   const updateHistoryEntry = (id, patch) => updateCharacter({ history: (active?.history || []).map(entry => entry.id === id ? { ...entry, ...patch } : entry) });
   const removeHistoryEntry = id => updateCharacter({ history: (active?.history || []).filter(entry => entry.id !== id) });
