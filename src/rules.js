@@ -25,7 +25,7 @@ export const TRAINING_WEIGHTS = [
 export const clamp=(n,min,max)=>Math.max(min,Math.min(max,Number(n)||0));
 export function effectiveSkills(character={}) {
   const base=character.skills||{}, age=AGE_MODIFIERS[Number(character.age)], district=DISTRICT_MODIFIERS[Number(character.district)], result={};
-  SKILLS.forEach(skill=>{let v=clamp(base[skill],0,99);if(age?.[0]===skill)v+=age[1];if(age?.[2]===skill)v+=age[3];if(district?.[0]===skill)v+=district[1];if(district?.[2]===skill)v+=district[3];result[skill]=Math.max(0,v);});
+  SKILLS.forEach(skill=>{let v=clamp(base[skill],0,99);if(age?.[0]===skill)v+=age[1];if(age?.[2]===skill)v+=age[3];if(district?.[0]===skill)v+=district[1];if(character.applyDistrictPenalty&&district?.[2]===skill)v+=district[3];result[skill]=Math.max(0,v);});
   return result;
 }
 export function derived(character={}) {
