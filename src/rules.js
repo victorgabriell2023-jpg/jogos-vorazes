@@ -5,16 +5,22 @@ export const weaponData = name => WEAPONS.find(weapon => weapon.name === name) |
 export const PSYCHOLOGY = ['Coragem','Disciplina','Instinto','Empatia','Astúcia'];
 export const AGE_MODIFIERS = {12:['Furtividade',1,'Atletismo',-1],13:['Percepção',1,'Intimidação',-1],14:['Improvisação',1,'Combate',-1],15:['Atletismo',1,'Primeiros Socorros',-1],16:['Rastreamento',1,'Persuasão',-1],17:['Sobrevivência',1,'Enganação',-1],18:['Persuasão',1,'Furtividade',-1]};
 export const DISTRICT_MODIFIERS = {
-  1:['Persuasão',1,'Sobrevivência',-1,'Etiqueta, luxo e produtos refinados.'],2:['Combate',1,'Furtividade',-1,'Treinamento físico e construção.'],3:['Engenharia',1,'Atletismo',-1,'Eletrônicos e mecanismos.'],4:['Sobrevivência',1,'Engenharia',-1,'Pesca e ambientes aquáticos.'],5:['Engenharia',1,'Combate',-1,'Energia e eletricidade.'],6:['Engenharia',1,'Intimidação',-1,'Transportes e veículos.'],7:['Atletismo',1,'Persuasão',-1,'Madeira e ambientes florestais.'],8:['Improvisação',1,'Combate',-1,'Tecidos, costura e reparos.'],9:['Conhecimento de Plantas',1,'Intimidação',-1,'Grãos e agricultura.'],10:['Conhecimento de Animais',1,'Engenharia',-1,'Criação e comportamento animal.'],11:['Conhecimento de Plantas',1,'Persuasão',-1,'Agricultura e plantações.'],12:['Sobrevivência',1,'Persuasão',-1,'Mineração e ambientes subterrâneos.']
+  1:['Persuasão',1,'Sobrevivência',-1,'Etiqueta, luxo e produtos refinados.'],2:['Combate',1,'Enganação',-1,'Treinamento físico e construção.'],3:['Engenharia',1,'Atletismo',-1,'Eletrônicos e mecanismos.'],4:['Sobrevivência',1,'Engenharia',-1,'Pesca e ambientes aquáticos.'],5:['Engenharia',1,'Combate',-1,'Energia e eletricidade.'],6:['Engenharia',1,'Intimidação',-1,'Transportes e veículos.'],7:['Atletismo',1,'Persuasão',-1,'Madeira e ambientes florestais.'],8:['Improvisação',1,'Combate',-1,'Tecidos, costura e reparos.'],9:['Conhecimento de Plantas',1,'Intimidação',-1,'Grãos e agricultura.'],10:['Conhecimento de Animais',1,'Engenharia',-1,'Criação e comportamento animal.'],11:['Conhecimento de Plantas',1,'Persuasão',-1,'Agricultura e plantações.'],12:['Sobrevivência',1,'Persuasão',-1,'Mineração e ambientes subterrâneos.']
 };
 export const DISTRICT_HP = {1:1,2:2,3:0,4:1,5:0,6:0,7:1,8:0,9:0,10:1,11:1,12:1};
 export const DIFFICULTIES = [['Muito fácil',6],['Fácil',9],['Moderada',12],['Difícil',15],['Muito difícil',18],['Extrema',21],['Excepcional',24]];
+export const TRAINING_SCORE_BANDS = [[-Infinity,8,2],[9,11,4],[12,14,6],[15,17,8],[18,20,10],[21,Infinity,12]];
+export const trainingScore = total => { const n=Number(total); return Number.isFinite(n) ? (TRAINING_SCORE_BANDS.find(([min,max])=>n>=min&&n<=max)?.[2] ?? 2) : null; };
+export const ARENA_EVENTS = ['Mudança climática ficcional','Mensagem pública','Encontro social','Oportunidade de recurso','Desafio ambiental abstrato','Momento de descanso'];
+export const SPONSOR_GIFTS = [{name:'Comum',cost:15,examples:'Porção de alimento ou água'},{name:'Útil',cost:30,examples:'Kit simples ou recurso de exploração'},{name:'Raro',cost:50,examples:'Kit completo ou recurso narrativo especial'}];
+export function sponsorDailyGain(popularity=20,reputation=50){const tier=[[0,19,2],[20,39,4],[40,59,6],[60,79,8],[80,100,10]].find(([a,b])=>popularity>=a&&popularity<=b);return Math.max(0,(tier?.[2]||2)+(reputation>75?2:reputation<25?-2:0));}
+export function weightedTrainingGrade(scores={}){return Math.max(1,Math.min(12,Math.round(TRAINING_WEIGHTS.reduce((sum,g)=>sum+Number(scores[g.name]??2)*g.weight/100,0))));}
 export const TRAINING_WEIGHTS = [
-  {name:'Preparação física e provas',weight:30,skills:['Combate','Atletismo','Arremesso']},
-  {name:'Criatividade e improvisação',weight:20,skills:['Improvisação','Furtividade','Enganação']},
-  {name:'Inteligência e conhecimento',weight:20,skills:['Engenharia','Percepção','Conhecimento de Plantas','Conhecimento de Animais']},
-  {name:'Sobrevivência e adaptação',weight:20,skills:['Sobrevivência','Caça','Rastreamento','Primeiros Socorros']},
-  {name:'Desempenho geral e apresentação',weight:10,skills:['Persuasão','Intimidação'],note:'Inclui postura pública, ainda sem fórmula definida.'}
+  {name:'Combate (provas abstratas)',weight:30,skills:['Combate','Atletismo','Arremesso']},
+  {name:'Criatividade',weight:20,skills:['Improvisação','Furtividade','Enganação']},
+  {name:'Inteligência',weight:20,skills:['Engenharia','Percepção','Conhecimento de Plantas','Conhecimento de Animais']},
+  {name:'Sobrevivência',weight:20,skills:['Sobrevivência','Caça','Rastreamento','Primeiros Socorros']},
+  {name:'Apresentação',weight:10,skills:['Persuasão','Intimidação'],note:'Pode ser avaliada em cena própria.'}
 ];
 export const clamp=(n,min,max)=>Math.max(min,Math.min(max,Number(n)||0));
 export function effectiveSkills(character={}) {
