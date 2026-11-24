@@ -118,7 +118,7 @@ function StatusTracks({ tracks = [], stats = {}, district = '', capacityOverride
     {id:'exaustao',name:'Exaustão',current:0,max:10,autoMax:true},
     {id:'estabilidade',name:'Estabilidade emocional',current:10,max:10,autoMax:true}
   ];
-  const rows = [...defaults.map(base => tracks.find(item => item.id === base.id || String(item.name || '').toLowerCase() === base.name.toLowerCase()) || base), ...tracks.filter(item => !defaults.some(base => item.id === base.id || String(item.name || '').toLowerCase() === base.name.toLowerCase()))];
+  const rows = [...defaults.map(base => tracks.find(item => item.id === base.id || (base.id==='exaustao'&&item.id==='cansaco') || String(item.name || '').toLowerCase() === base.name.toLowerCase()) || base), ...tracks.filter(item => !defaults.some(base => item.id === base.id || String(item.name || '').toLowerCase() === base.name.toLowerCase()))];
   const calculated = derived({stats,district});
   const update = (index, patch) => onChange(rows.map((track, i) => i === index ? { ...track, ...patch } : track));
   const restore = index => update(index, { maxOverride:false, autoMax:true, max: rows[index].id === 'vida' ? (calculated.hpMax ?? rows[index].max) : 10 });
@@ -160,7 +160,7 @@ function MasterPanel({ characters, setCharacters, campaigns }) {
   });
   const tracksFor = character => defaults.map(base => {
     const saved = (character.tracks || []).find(track => track.id === base.id || (base.id==='exaustao'&&track.id==='cansaco') || String(track.name || '').toLowerCase() === base.name.toLowerCase());
-    const merged = saved ? { ...base, ...saved } : base;
+    const merged = saved ? { ...base, ...saved, id:base.id } : base;
     if (base.id === 'vida' && merged.maxOverride !== true) {
       const calculated = derived({ stats: character.stats || {}, district: character.district || '' }).hpMax;
       return calculated === null ? { ...merged, masterPendingMax: true } : { ...merged, max: calculated, masterPendingMax: false };
