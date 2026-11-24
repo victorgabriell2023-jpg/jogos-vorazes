@@ -10,7 +10,7 @@ export const DISTRICT_MODIFIERS = {
 export const DISTRICT_HP = {1:1,2:2,3:0,4:1,5:0,6:0,7:1,8:0,9:0,10:1,11:1,12:1};
 export const DIFFICULTIES = [['Muito fácil',6],['Fácil',9],['Moderada',12],['Difícil',15],['Muito difícil',18],['Extrema',21],['Excepcional',24]];
 export const TRAINING_SCORE_BANDS = [[-Infinity,8,2],[9,11,4],[12,14,6],[15,17,8],[18,20,10],[21,Infinity,12]];
-export const trainingScore = total => { const n=Number(total); return Number.isFinite(n) ? (TRAINING_SCORE_BANDS.find(([min,max])=>n>=min&&n<=max)?.[2] ?? 2) : null; };
+export const trainingScore = total => { if(total===undefined||total===null||total==='') return null; const n=Number(total); return Number.isFinite(n) ? (TRAINING_SCORE_BANDS.find(([min,max])=>n>=min&&n<=max)?.[2] ?? 2) : null; };
 export const ARENA_EVENTS = ['Mudança climática ficcional','Mensagem pública','Encontro social','Oportunidade de recurso','Desafio ambiental abstrato','Momento de descanso'];
 export const SPONSOR_GIFTS = [{name:'Comum',cost:15,examples:'Porção de alimento ou água'},{name:'Útil',cost:30,examples:'Kit simples ou recurso de exploração'},{name:'Raro',cost:50,examples:'Kit completo ou recurso narrativo especial'}];
 export function sponsorDailyGain(popularity=20,reputation=50){const tier=[[0,19,2],[20,39,4],[40,59,6],[60,79,8],[80,100,10]].find(([a,b])=>popularity>=a&&popularity<=b);return Math.max(0,(tier?.[2]||2)+(reputation>75?2:reputation<25?-2:0));}
