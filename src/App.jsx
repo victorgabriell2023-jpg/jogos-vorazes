@@ -221,21 +221,14 @@ function EditableItems({ title, items = [], onChange }) {
     : { name:'', kind:'item' }]);
   const normalized = items.map(item => typeof item === 'string' ? { name:item, kind:'item' } : item);
   return <div className={title === 'Inventário' ? 'custom-section inventory-section' : 'custom-section'}>
-    <div className="custom-heading"><h4>{title}</h4>{title === 'Inventário' ? <div className="inventory-actions"><button type="button" className="text-button" onClick={() => addItem('item')}><Plus size={14}/> Item</button><button type="button" className="text-button" onClick={() => addItem('weapon')}><Plus size={14}/> Arma</button></div> : <button type="button" className="text-button" onClick={() => onChange([...items, ''])}><Plus size={14}/> Adicionar</button>}</div>
-    {items.length === 0 && <p className="muted">Nenhum item cadastrado.</p>}
+    <div className="custom-heading"><div><h4>{title}</h4>{title === 'Inventário' && <p className="inventory-subtitle">EQUIPAMENTO E PERTENCES DO TRIBUTO · {items.length} REGISTROS</p>}</div>{title === 'Inventário' ? <div className="inventory-actions"><button type="button" className="inventory-add item-add" onClick={() => addItem('item')}><Plus size={14}/> Novo item</button><button type="button" className="inventory-add weapon-add" onClick={() => addItem('weapon')}><Plus size={14}/> Nova arma</button></div> : <button type="button" className="text-button" onClick={() => onChange([...items, ''])}><Plus size={14}/> Adicionar</button>}</div>
+    {items.length === 0 && title === 'Inventário' && <div className="inventory-empty"><span className="inventory-empty-mark">✦</span><strong>Compartimento vazio</strong><p>Adicione equipamentos, suprimentos ou armas ao registro deste tributo.</p></div>}
+    {items.length === 0 && title !== 'Inventário' && <p className="muted">Nenhum item cadastrado.</p>}
     {title === 'Inventário' ? <div className="inventory-list">
       {normalized.map((item, index) => <article className={item.kind === 'weapon' ? 'inventory-entry weapon-entry' : 'inventory-entry'} key={item.id || index}>
-        <div className="inventory-entry-main">
-          <input aria-label="Nome do item" value={item.name || ''} onChange={e => update(index, {name:e.target.value})} placeholder={item.kind === 'weapon' ? 'Nome da arma' : 'Nome do item'}/>
-          <select aria-label="Categoria do inventário" value={item.kind === 'weapon' ? 'weapon' : 'item'} onChange={e => update(index, e.target.value === 'weapon' ? {kind:'weapon',weaponType:item.weaponType || 'Corpo a corpo',damage:item.damage || ''} : {kind:'item'})}>
-            <option value="item">Item</option><option value="weapon">Arma</option>
-          </select>
-        </div>
-        {item.kind === 'weapon' && <div className="weapon-stats">
-          <label>Tipo<input value={item.weaponType || ''} onChange={e => update(index, {weaponType:e.target.value})} placeholder="Ex.: corpo a corpo, distância..."/></label>
-          <label>Dano<input value={item.damage || ''} onChange={e => update(index, {damage:e.target.value})} placeholder="Definido pelo mestre"/></label>
-        </div>}
-        <button type="button" className="icon-button inventory-delete" onClick={() => onChange(items.filter((_, i) => i !== index))} aria-label="Excluir item"><Trash2 size={14}/></button>
+        <div className="inventory-card-top"><span className="inventory-symbol">{item.kind === 'weapon' ? '⚔' : '◇'}</span><span className="inventory-category">{item.kind === 'weapon' ? 'EQUIPAMENTO / ARMA' : 'PERTENCE / SUPRIMENTO'}</span><select aria-label="Categoria do inventário" value={item.kind === 'weapon' ? 'weapon' : 'item'} onChange={e => update(index, e.target.value === 'weapon' ? {kind:'weapon',weaponType:item.weaponType || 'Corpo a corpo',damage:item.damage || ''} : {kind:'item'})}><option value="item">Item</option><option value="weapon">Arma</option></select><button type="button" className="inventory-delete" onClick={() => onChange(items.filter((_, i) => i !== index))} aria-label="Excluir item"><Trash2 size={14}/></button></div>
+        <input className="inventory-name" aria-label="Nome do item" value={item.name || ''} onChange={e => update(index, {name:e.target.value})} placeholder={item.kind === 'weapon' ? 'Nome da arma' : 'Nome do item'}/>
+        {item.kind === 'weapon' ? <div className="weapon-stats"><label><span>TIPO</span><input value={item.weaponType || ''} onChange={e => update(index, {weaponType:e.target.value})} placeholder="Classificação"/></label><label className="damage-field"><span>DANO</span><input value={item.damage || ''} onChange={e => update(index, {damage:e.target.value})} placeholder="A definir"/></label></div> : <div className="item-note">ITEM REGISTRADO NO INVENTÁRIO</div>}
       </article>)}
     </div> : normalized.map((item, index) => <div className="custom-row single" key={index}>
       <input value={typeof items[index] === 'string' ? items[index] : (item.name || '')} onChange={e => onChange(items.map((value, i) => i === index ? e.target.value : value))} placeholder={`Novo item de ${title.toLowerCase()}`} />
