@@ -1,1 +1,1 @@
-Final character sheet fields and HP sync verification - 2026-11-24
+Build solicitado pelo usuário - 2026-11-24 21:25 BRT
