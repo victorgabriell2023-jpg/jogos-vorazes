@@ -199,7 +199,7 @@ function MasterPanel({ characters, setCharacters, campaigns }) {
           return <div className="master-status" key={track.id}>
             <div className="master-status-top"><strong>{track.name}</strong><span>{current} / {track.max===null?'Pendente':max}</span></div>
             <div className="master-status-bar"><i style={{width:percent+'%'}}/></div>
-            <div className="master-status-edit"><label>Atual<input type="number" min="0" max={max} step="1" value={track.current ?? 0} onChange={e => updateTrack(character.id, track.id, {current:e.target.value})}/></label><span>Máximo: {track.max??'—'}</span><div><button type="button" onClick={() => updateTrack(character.id, track.id, {current:Math.max(0,current-1)})} disabled={track.max===null} aria-label={'Diminuir '+track.name}>−</button><button type="button" disabled={track.max===null} onClick={() => updateTrack(character.id, track.id, {current:Math.min(max,current+1)})} aria-label={'Aumentar '+track.name}>+</button></div></div>
+            <div className="master-status-edit"><label>Atual<input type="number" min="0" max={max} step="1" disabled={track.max===null} value={track.current ?? 0} onChange={e => updateTrack(character.id, track.id, {current:e.target.value})}/></label><span>Máximo: {track.max??'—'}</span><div><button type="button" onClick={() => updateTrack(character.id, track.id, {current:Math.max(0,current-1)})} disabled={track.max===null} aria-label={'Diminuir '+track.name}>−</button><button type="button" disabled={track.max===null} onClick={() => updateTrack(character.id, track.id, {current:Math.min(max,current+1)})} aria-label={'Aumentar '+track.name}>+</button></div></div>
           </div>;
         })}</div>
         <div className="master-extra-grid">
