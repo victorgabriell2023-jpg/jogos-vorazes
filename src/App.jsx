@@ -220,7 +220,7 @@ function EditableItems({ title, items = [], onChange, stats = {} }) {
     ['Objeto de desafio leve',1],['Objeto de desafio médio',2],['Objeto de desafio pesado',3],
     ['Roupas comuns (vestidas)',0],['Proteção leve (guardada)',1],['Jaqueta reforçada (guardada)',2],['Colete leve (guardado)',2],['Colete reforçado (guardado)',3],['Capacete (guardado)',1],['Escudo (guardado)',2],['Outro',1]
   ];
-  const normalize=(item,index)=>typeof item==='string'?{id:'legacy-'+index,name:item,kind:'item',category:'Outro',quantity:1,spaces:1,notes:'',shared:false}:{...item,kind:'item',shared:!!item.shared,category:item.category==='Proteção guardada'?'Proteção leve (guardada)':item.category==='Proteção vestida'?'Roupas comuns (vestidas)':(item.category||'Outro'),quantity:Math.max(1,Number(item.quantity)||1),spaces:Math.max(0,Number(item.spaces??1)||0)};
+  const normalize=(item,index)=>typeof item==='string'?{id:'legacy-'+index,name:item,kind:'item',category:'Outro',quantity:1,spaces:1,notes:'',shared:false}:{...item,id:item.id??'legacy-'+index,kind:'item',shared:!!item.shared,category:item.category==='Proteção guardada'?'Proteção leve (guardada)':item.category==='Proteção vestida'?'Roupas comuns (vestidas)':(item.category||'Outro'),quantity:Math.max(1,Number(item.quantity)||1),spaces:Math.max(0,Number(item.spaces??1)||0)};
   const normalized=items.map(normalize);
   const capacity=6+Math.max(0,Math.min(3,Number(stats?.Força)||0))*2;
   const used=normalized.reduce((sum,item)=>sum+item.quantity*item.spaces,0);
