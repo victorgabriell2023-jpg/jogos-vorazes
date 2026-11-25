@@ -203,7 +203,7 @@ function MasterPanel({ characters, setCharacters, campaigns }) {
           </div>;
         })}</div>
         <div className="master-extra-grid">
-          <label>Condições atuais<textarea value={(character.conditions || []).join('\n')} onChange={e => updateConditions(character.id,e.target.value)} placeholder="Uma condição por linha..."/></label>
+          <label>Condição<select value={character.conditionLevel||'Nenhuma'} onChange={e=>setCharacters(items=>items.map(c=>c.id===character.id?{...c,conditionLevel:e.target.value}:c))}>{['Nenhuma','Leve','Moderada','Grave','Crítica'].map(v=><option key={v}>{v}</option>)}</select></label>
           <label>Anotações do mestre (salvas neste dispositivo)<textarea value={character.masterNotes || ''} onChange={e => updateNotes(character.id,e.target.value)} placeholder="Informações reservadas, consequências, segredos..."/></label>
         </div>
       </article>;
