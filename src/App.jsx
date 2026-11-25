@@ -125,7 +125,7 @@ function StatusTracks({ tracks = [], stats = {}, district = '', survival = {}, o
     {id:'estabilidade',name:'Estabilidade emocional',current:10}
   ];
   const calculated=derived({stats,district});
-  const rows=defaults.map(base=>{const saved=tracks.find(item=>item.id===base.id||(base.id==='exaustao'&&item.id==='cansaco'));const fallback=base.id==='estabilidade'?(survival.estabilidade??survival.stability??base.current):(survival[base.id]??base.current);return {...base,...(saved||{}),id:base.id,name:base.name,current:saved?.current??fallback};});
+  const rows=defaults.map(base=>{const saved=tracks.find(item=>item.id===base.id||(base.id==='exaustao'&&item.id==='cansaco'));const fallback=base.id==='estabilidade'?(survival.estabilidade??survival.stability??base.current):(survival[base.id]??base.current);return {...base,...(saved||{}),id:base.id,name:base.name,current:base.id==='vida'?(saved?.current??base.current):(base.id==='estabilidade'?(survival.estabilidade??survival.stability??saved?.current??base.current):(survival[base.id]??saved?.current??base.current))};});
   const maxFor=track=>track.id==='vida'?calculated.hpMax:10;
   const update=(id,value)=>onChange(rows.map(track=>track.id===id?{...track,current:Math.max(0,Math.min(maxFor(track)??999,Math.round(Number(value)||0)))}:track));
   return <div className="custom-section status-workbench">
@@ -161,7 +161,7 @@ function MasterPanel({ characters, setCharacters, campaigns }) {
   const tracksFor = character => defaults.map(base => {
     const saved=(character.tracks||[]).find(track=>track.id===base.id||(base.id==='exaustao'&&track.id==='cansaco'));
     const max=base.id==='vida'?derived({stats:character.stats||{},district:character.district||''}).hpMax:10;
-    const fallback=base.id==='estabilidade'?(character.survival?.estabilidade??character.survival?.stability??base.current):(character.survival?.[base.id]??base.current);const current=Math.max(0,Math.min(max??999,Math.round(Number(saved?.current??fallback)||0)));return {...base,...(saved||{}),id:base.id,name:base.name,max,current};
+    const fallback=base.id==='estabilidade'?(character.survival?.estabilidade??character.survival?.stability??base.current):(character.survival?.[base.id]??base.current);const sourceCurrent=base.id==='vida'?(saved?.current??base.current):(base.id==='estabilidade'?(character.survival?.estabilidade??character.survival?.stability??saved?.current??base.current):(character.survival?.[base.id]??saved?.current??base.current));const current=Math.max(0,Math.min(max??999,Math.round(Number(sourceCurrent)||0)));return {...base,...(saved||{}),id:base.id,name:base.name,max,current};
   });
   const updateTrack = (characterId,trackId,patch) => setCharacters(items=>items.map(character=>{
     if(character.id!==characterId)return character;
