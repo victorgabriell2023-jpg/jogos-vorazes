@@ -147,11 +147,11 @@ function MasterPanel({ characters, setCharacters, campaigns }) {
   const [campaignId, setCampaignId] = useState('all');
   const [query, setQuery] = useState('');
   const defaults = [
-    { id:'vida', name:'Vida', current:16, max:16 },
-    { id:'fome', name:'Fome', current:0, max:10 },
-    { id:'sede', name:'Sede', current:0, max:10 },
-    { id:'exaustao', name:'Exaustão', current:0, max:10 },
-    { id:'estabilidade', name:'Estabilidade emocional', current:10, max:10 }
+    { id:'vida', name:'PV', current:16 },
+    { id:'fome', name:'Fome', current:0 },
+    { id:'sede', name:'Sede', current:0 },
+    { id:'exaustao', name:'Exaustão', current:0 },
+    { id:'estabilidade', name:'Estabilidade emocional', current:10 }
   ];
   const campaign = campaigns.find(item => String(item.id) === campaignId);
   const roster = characters.filter(character => {
@@ -159,20 +159,20 @@ function MasterPanel({ characters, setCharacters, campaigns }) {
     return inCampaign && (character.name || '').toLowerCase().includes(query.toLowerCase());
   });
   const tracksFor = character => defaults.map(base => {
-    const saved = (character.tracks || []).find(track => track.id === base.id || (base.id==='exaustao'&&track.id==='cansaco') || String(track.name || '').toLowerCase() === base.name.toLowerCase());
-    const merged = saved ? { ...base, ...saved, id:base.id } : base;
-    if (base.id === 'vida' && merged.maxOverride !== true) {
-      const calculated = derived({ stats: character.stats || {}, district: character.district || '' }).hpMax;
-      return calculated === null ? { ...merged, masterPendingMax: true } : { ...merged, max: calculated, masterPendingMax: false };
-    }
-    return { ...merged, masterPendingMax: false };
+    const saved=(character.tracks||[]).find(track=>track.id===base.id||(base.id==='exaustao'&&track.id==='cansaco'));
+    const max=base.id==='vida'?derived({stats:character.stats||{},district:character.district||''}).hpMax:10;
+    return {...base,...(saved||{}),id:base.id,max};
   });
-  const updateTrack = (characterId, trackId, patch) => setCharacters(items => items.map(character => {
-    if (character.id !== characterId) return character;
-    const tracks = tracksFor(character);
-    const survivalKey = ({fome:'fome',sede:'sede',exaustao:'exaustao',estabilidade:'estabilidade'})[trackId];
-    const nextTracks = tracks.map(track => track.id === trackId ? { ...track, ...patch } : track);
-    return { ...character, tracks: nextTracks, ...(survivalKey&&patch.current!==undefined?{survival:{...(character.survival||{}),[survivalKey]:Math.max(0,Math.min(10,Number(patch.current)||0))}}:{}) };
+  const updateTrack = (characterId,trackId,patch) => setCharacters(items=>items.map(character=>{
+    if(character.id!==characterId)return character;
+    const tracks=tracksFor(character);
+    const target=tracks.find(track=>track.id===trackId);
+    if(!target)return character;
+    const max=Number(target.max)||99;
+    const current=Math.max(0,Math.min(max,Math.round(Number(patch.current)||0)));
+    const nextTracks=tracks.map(track=>track.id===trackId?{...track,current}:track);
+    const survivalKey=({fome:'fome',sede:'sede',exaustao:'exaustao',estabilidade:'estabilidade'})[trackId];
+    return {...character,tracks:nextTracks,...(survivalKey?{survival:{...(character.survival||{}),[survivalKey]:current}}:{})};
   }));
   const updateNotes = (characterId, masterNotes) => setCharacters(items => items.map(character => character.id === characterId ? { ...character, masterNotes } : character));
   const updateConditions = (characterId, value) => setCharacters(items => items.map(character => character.id === characterId ? { ...character, conditions: value.split('\n').map(item => item.trim()).filter(Boolean) } : character));
@@ -199,7 +199,7 @@ function MasterPanel({ characters, setCharacters, campaigns }) {
           return <div className="master-status" key={track.id}>
             <div className="master-status-top"><strong>{track.name}</strong><span>{current} / {track.masterPendingMax ? 'Pendente' : max}</span></div>
             <div className="master-status-bar"><i style={{width:percent+'%'}}/></div>
-            <div className="master-status-edit"><label>Atual<input type="number" value={track.current ?? 0} onChange={e => updateTrack(character.id, track.id, {current:e.target.value})}/></label><label>Máximo<input type="number" value={track.masterPendingMax ? '' : (track.max ?? 10)} placeholder={track.masterPendingMax ? 'Pendente' : ''} onChange={e => updateTrack(character.id, track.id, {max:e.target.value,maxOverride:true})}/></label><div><button type="button" onClick={() => updateTrack(character.id, track.id, {current:Math.max(0,current-1)})} aria-label={'Diminuir '+track.name}>−</button><button type="button" onClick={() => updateTrack(character.id, track.id, {current:Math.min(max,current+1)})} aria-label={'Aumentar '+track.name}>+</button></div></div>
+            <div className="master-status-edit"><label>Atual<input type="number" min="0" max={max} step="1" value={track.current ?? 0} onChange={e => updateTrack(character.id, track.id, {current:e.target.value})}/></label><span>Máximo: {track.max??'—'}</span><div><button type="button" onClick={() => updateTrack(character.id, track.id, {current:Math.max(0,current-1)})} aria-label={'Diminuir '+track.name}>−</button><button type="button" onClick={() => updateTrack(character.id, track.id, {current:Math.min(max,current+1)})} aria-label={'Aumentar '+track.name}>+</button></div></div>
           </div>;
         })}</div>
         <div className="master-extra-grid">
