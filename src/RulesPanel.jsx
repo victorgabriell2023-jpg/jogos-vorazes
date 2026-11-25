@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Dices, HeartPulse, Users, GraduationCap, HeartHandshake, Package, Plus, Trash2, Sparkles } from 'lucide-react';
-import { ATTRIBUTES, SKILLS, PSYCHOLOGY, AGE_MODIFIERS, DISTRICT_MODIFIERS, DISTRICT_HP, DIFFICULTIES, TRAINING_WEIGHTS, TRAINING_SCORE_BANDS, ARENA_EVENTS, SPONSOR_GIFTS, trainingScore, weightedTrainingGrade, sponsorDailyGain, derived, rollD20, survivalPenalty, clamp } from './rules.js';
+import { ATTRIBUTES, SKILLS, PSYCHOLOGY, AGE_MODIFIERS, DISTRICT_MODIFIERS, DISTRICT_HP, DIFFICULTIES, TRAINING_WEIGHTS, TRAINING_SCORE_BANDS, ARENA_EVENTS, SPONSOR_GIFTS, trainingScore, weightedTrainingGrade, derived, rollD20, survivalPenalty, clamp } from './rules.js';
 
 const field=(obj,key)=>Number(obj?.[key]||0);
 const inventorySpaces=item=>Math.max(0,Number(item?.spaces??1)||0)*Math.max(1,Number(item?.quantity??1)||1);
