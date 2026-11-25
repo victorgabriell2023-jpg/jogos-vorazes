@@ -1,7 +1,5 @@
 export const ATTRIBUTES = ['Força','Agilidade','Vigor','Inteligência','Carisma'];
 export const SKILLS = ['Atletismo','Combate','Furtividade','Arremesso','Sobrevivência','Caça','Rastreamento','Primeiros Socorros','Conhecimento de Plantas','Conhecimento de Animais','Engenharia','Percepção','Persuasão','Enganação','Intimidação','Improvisação'];
-export const WEAPONS = [{"name":"Adaga","category":"Leve","damage":"1d4","spaces":1},{"name":"Faca de caça","category":"Leve","damage":"1d4","spaces":1},{"name":"Funda","category":"Leve","damage":"1d4","spaces":1},{"name":"Estilingue","category":"Leve","damage":"1d4","spaces":1},{"name":"Bastão","category":"Leve","damage":"1d4","spaces":1},{"name":"Dardo","category":"Leve","damage":"1d4","spaces":1},{"name":"Facão","category":"Intermediária","damage":"1d6","spaces":2},{"name":"Arco","category":"Intermediária","damage":"1d6","spaces":2},{"name":"Clava","category":"Intermediária","damage":"1d6","spaces":2},{"name":"Martelo","category":"Intermediária","damage":"1d6","spaces":2},{"name":"Espada","category":"Pesada","damage":"1d8","spaces":3},{"name":"Machado","category":"Pesada","damage":"1d8","spaces":3},{"name":"Lança","category":"Pesada","damage":"1d8","spaces":3},{"name":"Tridente","category":"Pesada","damage":"1d8","spaces":3},{"name":"Besta","category":"Pesada","damage":"1d8","spaces":3}];
-export const weaponData = name => WEAPONS.find(weapon => weapon.name === name) || null;
 export const PSYCHOLOGY = ['Coragem','Disciplina','Instinto','Empatia','Astúcia'];
 export const AGE_MODIFIERS = {12:['Furtividade',1,'Atletismo',-1],13:['Percepção',1,'Intimidação',-1],14:['Improvisação',1,'Combate',-1],15:['Atletismo',1,'Primeiros Socorros',-1],16:['Rastreamento',1,'Persuasão',-1],17:['Sobrevivência',1,'Enganação',-1],18:['Persuasão',1,'Furtividade',-1]};
 export const DISTRICT_MODIFIERS = {
@@ -22,7 +20,7 @@ export const TRAINING_WEIGHTS = [
   {name:'Sobrevivência',weight:20,skills:['Sobrevivência','Caça','Rastreamento','Primeiros Socorros']},
   {name:'Apresentação',weight:10,skills:['Persuasão','Intimidação'],note:'Pode ser avaliada em cena própria.'}
 ];
-export const clamp=(n,min,max)=>Math.max(min,Math.min(max,Number(n)||0));
+export const clamp=(n,min,max)=>Math.max(min,Math.min(max,Math.round(Number(n)||0)));
 export function effectiveSkills(character={}) {
   const base=character.skills||{}, age=AGE_MODIFIERS[Number(character.age)], district=DISTRICT_MODIFIERS[Number(character.district)], result={};
   SKILLS.forEach(skill=>{let v=clamp(base[skill],0,5);if(age?.[0]===skill)v+=age[1];if(age?.[2]===skill)v+=age[3];if(district?.[0]===skill)v+=district[1];if((character.applyDistrictPenalty||![1,2].includes(Number(character.district)))&&district?.[2]===skill)v+=district[3];result[skill]=Math.max(0,v);});
