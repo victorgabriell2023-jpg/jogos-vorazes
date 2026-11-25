@@ -73,7 +73,7 @@ function CharacterBuildSheet({ stats = {}, skills = {}, age, district, onStats, 
   const changeValue = (group, key, delta, setter, max) => {
     const source = group || {};
     const total = Object.values(source).reduce((sum,v)=>sum+(Number(v)||0),0);
-    const limit = group===stats ? 10 : 8;
+    const limit = group===stats ? 10 : progressionUnlocked ? Infinity : 8;
     if(delta>0 && total>=limit)return;
     const value = Math.max(0, Math.min(max, (Number(source[key]) || 0) + delta));
     setter({ ...source, [key]: value });
@@ -83,7 +83,7 @@ function CharacterBuildSheet({ stats = {}, skills = {}, age, district, onStats, 
     if (ageMod?.[0] === key) value += ageMod[1];
     if (ageMod?.[2] === key) value += ageMod[3];
     if (districtMod?.[0] === key) value += districtMod[1];
-    if (applyDistrictPenalty && districtMod?.[2] === key) value += districtMod[3];
+    if ((applyDistrictPenalty || ![1,2].includes(Number(district))) && districtMod?.[2] === key) value += districtMod[3];
     return value;
   };
   return <div className="character-build">
@@ -92,7 +92,7 @@ function CharacterBuildSheet({ stats = {}, skills = {}, age, district, onStats, 
       <div className="attribute-grid">{ATTRIBUTES.map((key,index) => <article className="attribute-card" key={key}>
         <div className="attribute-index">0{index+1}</div><div className="attribute-copy"><strong>{key}</strong><small>{attributeInfo[key]}</small></div>
         <div className="attribute-control"><button type="button" onClick={() => changeValue(stats,key,-1,onStats,3)} aria-label={'Diminuir '+key}>−</button><input aria-label={key} type="number" min="0" max="3" value={Number(stats[key])||0} onChange={e=>{const next={...stats,[key]:Math.max(0,Math.min(3,Number(e.target.value)||0))};if(ATTRIBUTES.reduce((sum,k)=>sum+(Number(next[k])||0),0)<=10)onStats(next);}}/><button type="button" onClick={() => changeValue(stats,key,1,onStats,3)} aria-label={'Aumentar '+key}>+</button></div>
-        <div className="attribute-meter"><i style={{width:((Number(stats[key])||0)/5*100)+'%'}}/></div>
+        <div className="attribute-meter"><i style={{width:((Number(stats[key])||0)/3*100)+'%'}}/></div>
       </article>)}</div>
       <div className="build-ruleline"><span>Criação: 10 pontos no total, até 3 por atributo.</span><span>O livro não define progressão de atributos.</span></div>
       {totalAttributes !== 10 && <p className="build-feedback">{totalAttributes < 10 ? 'Ainda há '+(10-totalAttributes)+' ponto(s) de atributo para distribuir.' : 'Atributos acima dos 10 pontos iniciais: progresso além da criação.'}</p>}
@@ -110,7 +110,7 @@ function CharacterBuildSheet({ stats = {}, skills = {}, age, district, onStats, 
       </section>)}</div>
       <div className="build-ruleline"><span>{progressionUnlocked ? 'Progressão liberada: até 5 por perícia.' : 'Criação: 8 pontos no total, até 2 por perícia.'}</span><span>Valor final = base + idade + distrito.</span></div>
       {!progressionUnlocked && totalSkills !== 8 && <p className="build-feedback">{totalSkills < 8 ? 'Ainda há '+(8-totalSkills)+' ponto(s) de perícia para distribuir.' : 'Perícias acima dos 8 pontos iniciais: progresso além da criação.'}</p>}
-      <div className="modifier-summary"><div><span>IDADE</span><strong>{ageMod ? ageMod[0]+' +'+ageMod[1]+' • '+ageMod[2]+' '+ageMod[3] : 'Defina idade entre 12 e 18'}</strong></div><div><span>DISTRITO</span><strong>{districtMod ? districtMod[0]+' +'+districtMod[1]+' • '+districtMod[2]+' '+districtMod[3] : Number(district)===13 ? 'Distrito 13 não jogável' : 'Defina o distrito'}</strong></div></div>{districtMod&&<label className="rule-line"><input type="checkbox" checked={applyDistrictPenalty} onChange={e=>onDistrictPenaltyChange?.(e.target.checked)}/> Aplicar limitação distrital proposta para teste (opcional)</label>}
+      <div className="modifier-summary"><div><span>IDADE</span><strong>{ageMod ? ageMod[0]+' +'+ageMod[1]+' • '+ageMod[2]+' '+ageMod[3] : 'Defina idade entre 12 e 18'}</strong></div><div><span>DISTRITO</span><strong>{districtMod ? districtMod[0]+' +'+districtMod[1]+' • '+districtMod[2]+' '+districtMod[3] : Number(district)===13 ? 'Distrito 13 não jogável' : 'Defina o distrito'}</strong></div></div>{districtMod&&[1,2].includes(Number(district))&&<label className="rule-line"><input type="checkbox" checked={applyDistrictPenalty} onChange={e=>onDistrictPenaltyChange?.(e.target.checked)}/> Aplicar limitação distrital proposta para teste (opcional)</label>}
     </section>
   </div>;
 }
