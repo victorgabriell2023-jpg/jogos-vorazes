@@ -54,7 +54,7 @@ export default function RulesPanel({characters,setCharacters}) {
   const trainingGrade=weightedTrainingGrade(categoryScores);
   const trainingComplete=trainingTotal===10&&SKILLS.every(k=>Array.from({length:field(training,k)},(_,i)=>trainingResults[k]?.[i]!==undefined&&trainingResults[k]?.[i]!==''&&!!trainingCategories[k]?.[i]).every(Boolean));
   const trained=TRAINING_WEIGHTS.map(g=>({...g,scores:SKILLS.flatMap(k=>(trainingResults[k]||[]).map((v,i)=>trainingCategories[k]?.[i]===g.name?trainingScore(v):null).filter(v=>v!==null)),score:categoryScores[g.name]}));
-  const inventory=(active?.inventory||[]).map((item,index)=>typeof item==='string'?{id:'legacy-'+index,name:item,quantity:1,spaces:1,category:'Outro',notes:''}:item);
+  const inventory=(active?.inventory||[]).map((item,index)=>typeof item==='string'?{id:'legacy-'+index,name:item,quantity:1,spaces:1,category:'Outro',notes:'',shared:false}:{...item,id:item.id??'legacy-'+index,shared:!!item.shared});
   const usedSpaces=inventory.reduce((sum,item)=>sum+inventorySpaces(item),0);
   const maxSpaces=derivedStats.carry;
   const relationships=active?.relationships||[];
