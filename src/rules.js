@@ -25,7 +25,7 @@ export const TRAINING_WEIGHTS = [
 export const clamp=(n,min,max)=>Math.max(min,Math.min(max,Number(n)||0));
 export function effectiveSkills(character={}) {
   const base=character.skills||{}, age=AGE_MODIFIERS[Number(character.age)], district=DISTRICT_MODIFIERS[Number(character.district)], result={};
-  SKILLS.forEach(skill=>{let v=clamp(base[skill],0,99);if(age?.[0]===skill)v+=age[1];if(age?.[2]===skill)v+=age[3];if(district?.[0]===skill)v+=district[1];if(character.applyDistrictPenalty&&district?.[2]===skill)v+=district[3];result[skill]=Math.max(0,v);});
+  SKILLS.forEach(skill=>{let v=clamp(base[skill],0,5);if(age?.[0]===skill)v+=age[1];if(age?.[2]===skill)v+=age[3];if(district?.[0]===skill)v+=district[1];if(character.applyDistrictPenalty&&district?.[2]===skill)v+=district[3];result[skill]=Math.max(0,v);});
   return result;
 }
 export function derived(character={}) {
@@ -39,4 +39,4 @@ export function rollD20({attribute=0,skill=0,dc=12,mode='normal'}={}) {
   const total=die+Number(attribute||0)+Number(skill||0);
   return {a,b,die,total,dc:Number(dc),success:total>=Number(dc),critical:die===20,naturalFail:die===1};
 }
-export function survivalPenalty(value){const n=clamp(value,0,10);if(n>=10)return 'Condição crítica';if(n>=9)return 'Desvantagem';if(n>=7)return -3;if(n>=5)return -2;if(n>=3)return -1;return 0;}
+export function survivalPenalty(value){const n=clamp(value,0,10);if(n>=10)return 'Pausa narrativa';if(n>=9)return 'Desvantagem';if(n>=7)return -3;if(n>=5)return -2;if(n>=3)return -1;return 0;}
