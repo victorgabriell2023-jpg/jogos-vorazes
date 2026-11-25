@@ -136,7 +136,7 @@ function StatusTracks({ tracks = [], stats = {}, district = '', onChange }) {
       return <div className="status-track-card" key={track.id}>
         <div className="status-track-head"><strong>{track.name}</strong><span>{current} / {max===null?'Defina o distrito':max}</span></div>
         <div className="status-track-bar"><span style={{width:pct+'%'}}/></div>
-        <div className="status-track-values"><label>Atual<input type="number" min="0" max={max??99} step="1" value={track.current??0} onChange={e=>update(track.id,e.target.value)}/></label><span className="status-track-maximum">Máximo: {max===null?'—':max}</span></div>
+        <div className="status-track-values"><label>Atual<input type="number" min="0" max={max??99} step="1" disabled={track.id==='vida'&&max===null} value={track.current??0} onChange={e=>update(track.id,e.target.value)}/></label><span className="status-track-maximum">Máximo: {max===null?'—':max}</span></div>
         {track.id==='vida'&&<div className="status-track-foot">{max===null?'Selecione um distrito jogável para calcular os PV.':'Automático: 16 + (Vigor × 2) + bônus distrital.'}{current<=0&&<strong> Incapacitado na ficção.</strong>}</div>}
       </div>;
     })}
