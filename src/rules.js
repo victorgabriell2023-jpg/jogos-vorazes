@@ -37,6 +37,6 @@ export function rollD20({attribute=0,skill=0,dc=12,mode='normal'}={}) {
   const a=1+Math.floor(Math.random()*20), b=mode==='normal'?null:1+Math.floor(Math.random()*20);
   const die=mode==='advantage'?Math.max(a,b):mode==='disadvantage'?Math.min(a,b):a;
   const total=die+Number(attribute||0)+Number(skill||0);
-  return {a,b,die,total,dc:Number(dc),success:total>=Number(dc),critical:die===20,naturalFail:die===1};
+  return {a,b,die,total,dc:Number(dc),success:die===20?true:die===1?false:total>=Number(dc),critical:die===20,naturalFail:die===1};
 }
 export function survivalPenalty(value){const n=clamp(value,0,10);if(n>=10)return 'Pausa narrativa';if(n>=9)return 'Desvantagem';if(n>=7)return -3;if(n>=5)return -2;if(n>=3)return -1;return 0;}
