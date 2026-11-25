@@ -194,10 +194,10 @@ function MasterPanel({ characters, setCharacters, campaigns }) {
         </header>
         <div className="master-status-grid">{tracks.map(track => {
           const current = Number(track.current) || 0;
-          const max = Math.max(1, Number(track.max) || 10);
-          const percent = Math.max(0, Math.min(100, current / max * 100));
+          const max = track.max===null?99:Math.max(1, Number(track.max) || 10);
+          const percent = track.max===null?0:Math.max(0, Math.min(100, current / max * 100));
           return <div className="master-status" key={track.id}>
-            <div className="master-status-top"><strong>{track.name}</strong><span>{current} / {track.masterPendingMax ? 'Pendente' : max}</span></div>
+            <div className="master-status-top"><strong>{track.name}</strong><span>{current} / {track.max===null?'Pendente':max}</span></div>
             <div className="master-status-bar"><i style={{width:percent+'%'}}/></div>
             <div className="master-status-edit"><label>Atual<input type="number" min="0" max={max} step="1" value={track.current ?? 0} onChange={e => updateTrack(character.id, track.id, {current:e.target.value})}/></label><span>Máximo: {track.max??'—'}</span><div><button type="button" onClick={() => updateTrack(character.id, track.id, {current:Math.max(0,current-1)})} aria-label={'Diminuir '+track.name}>−</button><button type="button" onClick={() => updateTrack(character.id, track.id, {current:Math.min(max,current+1)})} aria-label={'Aumentar '+track.name}>+</button></div></div>
           </div>;
