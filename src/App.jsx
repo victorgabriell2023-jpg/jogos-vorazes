@@ -125,7 +125,7 @@ function StatusTracks({ tracks = [], stats = {}, district = '', onChange }) {
     {id:'estabilidade',name:'Estabilidade emocional',current:10}
   ];
   const calculated=derived({stats,district});
-  const rows=defaults.map(base=>tracks.find(item=>item.id===base.id||(base.id==='exaustao'&&item.id==='cansaco'))||base);
+  const rows=defaults.map(base=>{const saved=tracks.find(item=>item.id===base.id||(base.id==='exaustao'&&item.id==='cansaco'));return {...base,...(saved||{}),id:base.id,name:base.name};});
   const maxFor=track=>track.id==='vida'?calculated.hpMax:10;
   const update=(id,value)=>onChange(rows.map(track=>track.id===id?{...track,current:Math.max(0,Math.min(maxFor(track)??999,Math.round(Number(value)||0)))}:track));
   return <div className="custom-section status-workbench">
@@ -161,7 +161,7 @@ function MasterPanel({ characters, setCharacters, campaigns }) {
   const tracksFor = character => defaults.map(base => {
     const saved=(character.tracks||[]).find(track=>track.id===base.id||(base.id==='exaustao'&&track.id==='cansaco'));
     const max=base.id==='vida'?derived({stats:character.stats||{},district:character.district||''}).hpMax:10;
-    return {...base,...(saved||{}),id:base.id,max};
+    return {...base,...(saved||{}),id:base.id,name:base.name,max};
   });
   const updateTrack = (characterId,trackId,patch) => setCharacters(items=>items.map(character=>{
     if(character.id!==characterId)return character;
